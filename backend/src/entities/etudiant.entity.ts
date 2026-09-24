@@ -28,6 +28,7 @@ export class Etudiant {
 
   @OneToMany(() => Diplome, (diplome) => diplome.etudiant)
   diplomes: Diplome[];
+  
   @OneToMany('Presence', (presence: Presence) => presence.etudiant)
   presences: Presence[];
 }

@@ -11,6 +11,7 @@ import { Diplome } from './entities/diplome.entity.js';
 import { AuthModule } from './auth/auth.module.js';
 import { Presence } from './entities/presence.entity.js';
 import { ProgrammeModule } from './programme/programme.module.js';
+import { PresenceModule } from './presence/presence.module.js';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ProgrammeModule } from './programme/programme.module.js';
     }),
     AuthModule,
     ProgrammeModule,
+    PresenceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
