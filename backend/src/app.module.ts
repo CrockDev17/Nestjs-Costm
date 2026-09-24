@@ -10,6 +10,7 @@ import { Paiement } from './entities/paiement.entity.js';
 import { Diplome } from './entities/diplome.entity.js';
 import { AuthModule } from './auth/auth.module.js';
 import { Presence } from './entities/presence.entity.js';
+import { ProgrammeModule } from './programme/programme.module.js';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { Presence } from './entities/presence.entity.js';
       synchronize: true,
     }),
     AuthModule,
+    ProgrammeModule,
   ],
   controllers: [AppController],
   providers: [AppService],
