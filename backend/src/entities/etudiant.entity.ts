@@ -4,7 +4,7 @@ import { Programme } from './programme.entity.js';
 import { Note } from './note.entity.js';
 import { Paiement } from './paiement.entity.js';
 import { Diplome } from './diplome.entity.js';
-
+import  type {Presence} from './presence.entity.js';
 @Entity('etudiants')
 export class Etudiant {
   @PrimaryGeneratedColumn('uuid')
@@ -28,4 +28,7 @@ export class Etudiant {
 
   @OneToMany(() => Diplome, (diplome) => diplome.etudiant)
   diplomes: Diplome[];
+  @OneToMany('Presence', (presence: Presence) => presence.etudiant)
+  presences: Presence[];
 }
+    
