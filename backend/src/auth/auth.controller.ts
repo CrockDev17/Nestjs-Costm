@@ -7,6 +7,7 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() userData: any) {
+    console.log('Reçu en entree', userData);
     return this.authService.register(userData);
   }
 
