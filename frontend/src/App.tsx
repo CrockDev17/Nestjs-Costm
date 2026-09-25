@@ -1,12 +1,21 @@
-export default function App() {
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Sidebar } from './components/Sidebar';
+import { PresencesView } from './pages/PresenceView';
+
+function App() {
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6">
-      <div className="bg-blue-600 p-8 rounded-2xl shadow-xl text-center max-w-md">
-        <h1 className="text-3xl font-bold mb-2">Portail Web COSTM 🚀</h1>
-        <p className="text-blue-100 text-sm">
-          React.js + Tailwind CSS sont configurés avec succès !
-        </p>
+    <Router>
+      <div style={{ display: 'flex' }}>
+        <Sidebar />
+        <main style={{ flex: 1, backgroundColor: '#f8fafc', minHeight: '100vh' }}>
+          <Routes>
+            <Route path="/" element={<Navigate to="/presences" replace />} />
+            <Route path="/presences" element={<PresencesView />} />
+          </Routes>
+        </main>
       </div>
-    </div>
+    </Router>
   );
 }
+
+export default App;
