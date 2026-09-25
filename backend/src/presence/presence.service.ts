@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-
 import { Presence } from '../entities/presence.entity.js';
 import { Etudiant } from '../entities/etudiant.entity.js';
 import { CreatePresenceDto } from './dto/create-presence.dto.js';
@@ -16,14 +15,9 @@ export class PresenceService {
     private readonly etudiantRepository: Repository<Etudiant>,
   ) {}
 
-  // =========================
-  // CRÉER UNE PRÉSENCE
-  // =========================
   async create(createPresenceDto: CreatePresenceDto): Promise<Presence> {
     const etudiant = await this.etudiantRepository.findOne({
-      where: {
-        id: createPresenceDto.etudiantId,
-      },
+      where: { id: createPresenceDto.etudiantId },
     });
 
     if (!etudiant) {
@@ -33,43 +27,25 @@ export class PresenceService {
     }
 
     const presence = this.presenceRepository.create({
-      date:
-        createPresenceDto.date ??
-        new Date().toISOString().slice(0, 10),
-
+      date: createPresenceDto.date ?? new Date().toISOString().slice(0, 10),
       statut: createPresenceDto.statut,
-
       justification: createPresenceDto.justification ?? null,
-
       etudiant: etudiant,
     });
 
     return this.presenceRepository.save(presence);
   }
 
-  // =========================
-  // RÉCUPÉRER TOUTES LES PRÉSENCES
-  // =========================
   async findAll(): Promise<Presence[]> {
     return this.presenceRepository.find({
-      relations: {
-        etudiant: true,
-      },
-      order: {
-        date: 'DESC',
-      },
+      relations: { etudiant: true },
+      order: { date: 'DESC' },
     });
   }
 
-  // =========================
-  // RÉCUPÉRER LES PRÉSENCES
-  // D'UN ÉTUDIANT
-  // =========================
   async findByEtudiant(etudiantId: string): Promise<Presence[]> {
     const etudiant = await this.etudiantRepository.findOne({
-      where: {
-        id: etudiantId,
-      },
+      where: { id: etudiantId },
     });
 
     if (!etudiant) {
@@ -79,28 +55,15 @@ export class PresenceService {
     }
 
     return this.presenceRepository.find({
-      where: {
-        etudiant: {
-          id: etudiantId,
-        },
-      },
-      relations: {
-        etudiant: true,
-      },
-      order: {
-        date: 'DESC',
-      },
+      where: { etudiant: { id: etudiantId } },
+      relations: { etudiant: true },
+      order: { date: 'DESC' },
     });
   }
 
-  // =========================
-  // SUPPRIMER UNE PRÉSENCE
-  // =========================
   async remove(id: string): Promise<void> {
     const presence = await this.presenceRepository.findOne({
-      where: {
-        id: id,
-      },
+      where: { id },
     });
 
     if (!presence) {

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post,  Body,  Param,  Delete,  UseGuards,} from '@nestjs/common';
 import { PresenceService } from './presence.service.js';
 import { CreatePresenceDto } from './dto/create-presence.dto.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
@@ -24,6 +24,7 @@ export class PresenceController {
   }
 
   @Get('etudiant/:etudiantId')
+  @Roles(UserRole.ADMIN, UserRole.ENSEIGNANT, UserRole.ETUDIANT)
   findByEtudiant(@Param('etudiantId') etudiantId: string) {
     return this.presenceService.findByEtudiant(etudiantId);
   }
