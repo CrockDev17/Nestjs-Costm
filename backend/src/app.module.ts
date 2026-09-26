@@ -1,36 +1,19 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller.js';
-import { AppService } from './app.service.js';
-import { User } from './entities/user.entity.js';
-import { Etudiant } from './entities/etudiant.entity.js';
-import { Programme } from './entities/programme.entity.js';
-import { Note } from './entities/note.entity.js';
-import { Paiement } from './entities/paiement.entity.js';
-import { Diplome } from './entities/diplome.entity.js';
-import { AuthModule } from './auth/auth.module.js';
-import { Presence } from './entities/presence.entity.js';
-import { ProgrammeModule } from './programme/programme.module.js';
-import { PresenceModule } from './presence/presence.module.js';
-import { EtudiantModule } from './etudiant/etudiant.module.js';
+import { createObserveModule } from '@nestjs/observe';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+
+export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: 'Crockb13123',
-      database: 'costm_db',
-      entities: [User, Etudiant, Programme, Note, Paiement, Diplome, Presence],
-      autoLoadEntities: true,
-      synchronize: true,
+    // Distributed tracing, auto-correlated logs, request/job metrics, error
+    // telemetry, alarms, and more — out of the box. Sign up at https://observe.nestjs.com
+    ObserveModule.forRoot({
+      appKey: 'YOUR_APP_KEY',
+      appSecret: 'YOUR_APP_SECRET',
+      serviceId: 'backend',
     }),
-    AuthModule,
-    ProgrammeModule,
-    PresenceModule,
-    EtudiantModule,
   ],
   controllers: [AppController],
   providers: [AppService],
