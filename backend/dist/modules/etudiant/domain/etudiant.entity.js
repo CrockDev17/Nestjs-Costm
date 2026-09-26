@@ -51,7 +51,7 @@ __decorate([
     __metadata("design:type", programme_entity_js_1.Programme)
 ], Etudiant.prototype, "programme", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => presence_entity_js_1.Presence, (presence) => presence.etudiant, { cascade: true }),
+    (0, typeorm_1.OneToMany)(() => presence_entity_js_1.Presence, (presence) => presence.etudiant),
     __metadata("design:type", Array)
 ], Etudiant.prototype, "presences", void 0);
 exports.Etudiant = Etudiant = __decorate([

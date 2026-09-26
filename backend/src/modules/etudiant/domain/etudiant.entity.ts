@@ -36,10 +36,9 @@ export class Etudiant {
   )
   programme: Programme;
 
-  @OneToMany(
-    () => Presence,
-    (presence) => presence.etudiant,
-    { cascade: true },
-  )
-  presences: Presence[];
+@OneToMany(
+  () => Presence,
+  (presence) => presence.etudiant,
+)
+presences: Presence[];
 }
