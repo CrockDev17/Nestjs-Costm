@@ -5,7 +5,7 @@ import {
   ManyToOne,
 } from 'typeorm';
 
-import { Etudiant } from '../etudiant/domain/etudiant.entity';
+import { Etudiant } from '../etudiant/domain/etudiant.entity.js';
 
 export enum StatutPresence {
   PRESENT = 'PRESENT',

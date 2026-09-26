@@ -12,12 +12,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Etudiant = void 0;
 const typeorm_1 = require("typeorm");
 const presence_entity_js_1 = require("../../presence/presence.entity.js");
+const programme_entity_js_1 = require("../../programme/domain/programme.entity.js");
 let Etudiant = class Etudiant {
     id;
     matricule;
     nom;
     prenom;
     email;
+    programme;
     presences;
 };
 exports.Etudiant = Etudiant;
@@ -41,6 +43,13 @@ __decorate([
     (0, typeorm_1.Column)({ unique: true }),
     __metadata("design:type", String)
 ], Etudiant.prototype, "email", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => programme_entity_js_1.Programme, (programme) => programme.etudiants, {
+        nullable: true,
+        onDelete: 'SET NULL',
+    }),
+    __metadata("design:type", programme_entity_js_1.Programme)
+], Etudiant.prototype, "programme", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => presence_entity_js_1.Presence, (presence) => presence.etudiant, { cascade: true }),
     __metadata("design:type", Array)

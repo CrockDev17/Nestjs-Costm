@@ -11,7 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreatePresenceDto = void 0;
 const class_validator_1 = require("class-validator");
-const presence_entity_1 = require("../presence.entity");
+const presence_entity_js_1 = require("../presence.entity.js");
 class CreatePresenceDto {
     statut;
     date;
@@ -20,7 +20,7 @@ class CreatePresenceDto {
 }
 exports.CreatePresenceDto = CreatePresenceDto;
 __decorate([
-    (0, class_validator_1.IsEnum)(presence_entity_1.StatutPresence),
+    (0, class_validator_1.IsEnum)(presence_entity_js_1.StatutPresence),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], CreatePresenceDto.prototype, "statut", void 0);

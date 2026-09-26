@@ -6,9 +6,9 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { Presence } from './presence.entity';
-import { CreatePresenceDto } from './dto/create-presence.dto';
-import { Etudiant } from '../etudiant/domain/etudiant.entity';
+import { Presence } from './presence.entity.js';
+import { CreatePresenceDto } from './dto/create-presence.dto.js';
+import { Etudiant } from '../etudiant/domain/etudiant.entity.js';
 
 @Injectable()
 export class PresenceService {

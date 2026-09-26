@@ -1,6 +1,6 @@
 import { Repository } from 'typeorm';
-import { Etudiant } from './domain/etudiant.entity';
-import { CreateEtudiantDto } from './dto/create-etudiant.dto';
+import { Etudiant } from './domain/etudiant.entity.js';
+import { CreateEtudiantDto } from './dto/create-etudiant.dto.js';
 export declare class EtudiantService {
     private readonly etudiantRepository;
     constructor(etudiantRepository: Repository<Etudiant>);

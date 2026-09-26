@@ -16,8 +16,8 @@ exports.PresenceService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const presence_entity_1 = require("./presence.entity");
-const etudiant_entity_1 = require("../etudiant/domain/etudiant.entity");
+const presence_entity_js_1 = require("./presence.entity.js");
+const etudiant_entity_js_1 = require("../etudiant/domain/etudiant.entity.js");
 let PresenceService = class PresenceService {
     presenceRepository;
     etudiantRepository;
@@ -50,8 +50,8 @@ let PresenceService = class PresenceService {
 exports.PresenceService = PresenceService;
 exports.PresenceService = PresenceService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(presence_entity_1.Presence)),
-    __param(1, (0, typeorm_1.InjectRepository)(etudiant_entity_1.Etudiant)),
+    __param(0, (0, typeorm_1.InjectRepository)(presence_entity_js_1.Presence)),
+    __param(1, (0, typeorm_1.InjectRepository)(etudiant_entity_js_1.Etudiant)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository])
 ], PresenceService);

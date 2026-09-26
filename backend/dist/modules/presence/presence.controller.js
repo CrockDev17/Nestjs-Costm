@@ -14,8 +14,8 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PresenceController = void 0;
 const common_1 = require("@nestjs/common");
-const presence_service_1 = require("./presence.service");
-const create_presence_dto_1 = require("./dto/create-presence.dto");
+const presence_service_js_1 = require("./presence.service.js");
+const create_presence_dto_js_1 = require("./dto/create-presence.dto.js");
 let PresenceController = class PresenceController {
     presenceService;
     constructor(presenceService) {
@@ -33,7 +33,7 @@ __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_presence_dto_1.CreatePresenceDto]),
+    __metadata("design:paramtypes", [create_presence_dto_js_1.CreatePresenceDto]),
     __metadata("design:returntype", void 0)
 ], PresenceController.prototype, "create", null);
 __decorate([
@@ -44,6 +44,6 @@ __decorate([
 ], PresenceController.prototype, "findAll", null);
 exports.PresenceController = PresenceController = __decorate([
     (0, common_1.Controller)('presences'),
-    __metadata("design:paramtypes", [presence_service_1.PresenceService])
+    __metadata("design:paramtypes", [presence_service_js_1.PresenceService])
 ], PresenceController);
 //# sourceMappingURL=presence.controller.js.map

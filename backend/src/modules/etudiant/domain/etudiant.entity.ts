@@ -1,5 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  ManyToOne,
+} from 'typeorm';
+
 import { Presence } from '../../presence/presence.entity.js';
+import { Programme } from '../../programme/domain/programme.entity.js';
 
 @Entity('etudiants')
 export class Etudiant {
@@ -18,6 +26,20 @@ export class Etudiant {
   @Column({ unique: true })
   email: string;
 
-  @OneToMany(() => Presence, (presence) => presence.etudiant, { cascade: true })
+  @ManyToOne(
+    () => Programme,
+    (programme) => programme.etudiants,
+    {
+      nullable: true,
+      onDelete: 'SET NULL',
+    },
+  )
+  programme: Programme;
+
+  @OneToMany(
+    () => Presence,
+    (presence) => presence.etudiant,
+    { cascade: true },
+  )
   presences: Presence[];
 }

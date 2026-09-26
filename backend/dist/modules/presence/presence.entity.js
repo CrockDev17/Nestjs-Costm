@@ -11,7 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Presence = exports.StatutPresence = void 0;
 const typeorm_1 = require("typeorm");
-const etudiant_entity_1 = require("../etudiant/domain/etudiant.entity");
+const etudiant_entity_js_1 = require("../etudiant/domain/etudiant.entity.js");
 var StatutPresence;
 (function (StatutPresence) {
     StatutPresence["PRESENT"] = "PRESENT";
@@ -48,8 +48,8 @@ __decorate([
     __metadata("design:type", String)
 ], Presence.prototype, "justification", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => etudiant_entity_1.Etudiant, (etudiant) => etudiant.presences, { onDelete: 'CASCADE' }),
-    __metadata("design:type", etudiant_entity_1.Etudiant)
+    (0, typeorm_1.ManyToOne)(() => etudiant_entity_js_1.Etudiant, (etudiant) => etudiant.presences, { onDelete: 'CASCADE' }),
+    __metadata("design:type", etudiant_entity_js_1.Etudiant)
 ], Presence.prototype, "etudiant", void 0);
 exports.Presence = Presence = __decorate([
     (0, typeorm_1.Entity)('presences')

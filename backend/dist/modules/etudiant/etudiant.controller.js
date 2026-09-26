@@ -14,8 +14,8 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EtudiantController = void 0;
 const common_1 = require("@nestjs/common");
-const etudiant_service_1 = require("./etudiant.service");
-const create_etudiant_dto_1 = require("./dto/create-etudiant.dto");
+const etudiant_service_js_1 = require("./etudiant.service.js");
+const create_etudiant_dto_js_1 = require("./dto/create-etudiant.dto.js");
 let EtudiantController = class EtudiantController {
     etudiantService;
     constructor(etudiantService) {
@@ -36,7 +36,7 @@ __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_etudiant_dto_1.CreateEtudiantDto]),
+    __metadata("design:paramtypes", [create_etudiant_dto_js_1.CreateEtudiantDto]),
     __metadata("design:returntype", void 0)
 ], EtudiantController.prototype, "create", null);
 __decorate([
@@ -54,6 +54,6 @@ __decorate([
 ], EtudiantController.prototype, "findOne", null);
 exports.EtudiantController = EtudiantController = __decorate([
     (0, common_1.Controller)('etudiants'),
-    __metadata("design:paramtypes", [etudiant_service_1.EtudiantService])
+    __metadata("design:paramtypes", [etudiant_service_js_1.EtudiantService])
 ], EtudiantController);
 //# sourceMappingURL=etudiant.controller.js.map

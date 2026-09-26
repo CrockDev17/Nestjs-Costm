@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
-import { PresenceService } from './presence.service';
-import { CreatePresenceDto } from './dto/create-presence.dto';
+import { PresenceService } from './presence.service.js';
+import { CreatePresenceDto } from './dto/create-presence.dto.js';
 
 @Controller('presences')
 export class PresenceController {

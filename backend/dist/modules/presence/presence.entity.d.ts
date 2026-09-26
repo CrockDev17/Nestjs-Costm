@@ -1,4 +1,4 @@
-import { Etudiant } from '../etudiant/domain/etudiant.entity';
+import { Etudiant } from '../etudiant/domain/etudiant.entity.js';
 export declare enum StatutPresence {
     PRESENT = "PRESENT",
     ABSENT = "ABSENT",

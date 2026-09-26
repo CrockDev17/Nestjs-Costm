@@ -6,7 +6,7 @@ import {
   IsUUID,
 } from 'class-validator';
 
-import { StatutPresence } from '../presence.entity';
+import { StatutPresence } from '../presence.entity.js';
 
 export class CreatePresenceDto {
   @IsEnum(StatutPresence)
