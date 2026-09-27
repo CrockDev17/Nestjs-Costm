@@ -15,6 +15,7 @@ const presence_entity_js_1 = require("../../presence/presence.entity.js");
 const programme_entity_js_1 = require("../../programme/domain/programme.entity.js");
 const note_entity_js_1 = require("../../note/domain/note.entity.js");
 const paiement_entity_js_1 = require("../../paiement/domain/paiement.entity.js");
+const diplome_entity_js_1 = require("../../diplome/domain/diplome.entity.js");
 let Etudiant = class Etudiant {
     id;
     matricule;
@@ -25,6 +26,7 @@ let Etudiant = class Etudiant {
     presences;
     notes;
     paiements;
+    diplomes;
 };
 exports.Etudiant = Etudiant;
 __decorate([
@@ -66,6 +68,10 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => paiement_entity_js_1.Paiement, (paiement) => paiement.etudiant),
     __metadata("design:type", Array)
 ], Etudiant.prototype, "paiements", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => diplome_entity_js_1.Diplome, (diplome) => diplome.etudiant),
+    __metadata("design:type", Array)
+], Etudiant.prototype, "diplomes", void 0);
 exports.Etudiant = Etudiant = __decorate([
     (0, typeorm_1.Entity)('etudiants')
 ], Etudiant);

@@ -9,24 +9,34 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
+const config_1 = require("@nestjs/config");
 const typeorm_config_1 = require("./core/config/typeorm.config");
 const etudiant_module_js_1 = require("./modules/etudiant/etudiant.module.js");
 const presence_module_js_1 = require("./modules/presence/presence.module.js");
 const programme_module_js_1 = require("./modules/programme/programme.module.js");
 const note_module_js_1 = require("./modules/note/note.module.js");
 const paiement_module_js_1 = require("./modules/paiement/paiement.module.js");
+const diplome_module_js_1 = require("./modules/diplome/diplome.module.js");
+const user_module_js_1 = require("./modules/user/user.module.js");
+const auth_module_js_1 = require("./modules/auth/auth.module.js");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            config_1.ConfigModule.forRoot({
+                isGlobal: true,
+            }),
             typeorm_1.TypeOrmModule.forRoot(typeorm_config_1.typeOrmConfig),
             etudiant_module_js_1.EtudiantModule,
             presence_module_js_1.PresenceModule,
             programme_module_js_1.ProgrammeModule,
             note_module_js_1.NoteModule,
             paiement_module_js_1.PaiementModule,
+            diplome_module_js_1.DiplomeModule,
+            user_module_js_1.UserModule,
+            auth_module_js_1.AuthModule,
         ],
     })
 ], AppModule);
