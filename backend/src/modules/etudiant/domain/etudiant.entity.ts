@@ -8,6 +8,8 @@ import {
 
 import { Presence } from '../../presence/presence.entity.js';
 import { Programme } from '../../programme/domain/programme.entity.js';
+import { Note } from '../../note/domain/note.entity.js';
+import { Paiement } from '../../paiement/domain/paiement.entity.js';
 
 @Entity('etudiants')
 export class Etudiant {
@@ -41,4 +43,16 @@ export class Etudiant {
   (presence) => presence.etudiant,
 )
 presences: Presence[];
+
+@OneToMany(
+  () => Note,
+  (note) => note.etudiant,
+)
+notes: Note[];
+
+@OneToMany(
+  () => Paiement,
+  (paiement) => paiement.etudiant,
+)
+paiements: Paiement[];
 }
