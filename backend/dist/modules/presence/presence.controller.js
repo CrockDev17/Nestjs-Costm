@@ -14,6 +14,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PresenceController = void 0;
 const common_1 = require("@nestjs/common");
+const jwt_auth_guard_js_1 = require("../auth/guards/jwt-auth.guard.js");
+const roles_guard_js_1 = require("../auth/guards/roles.guard.js");
+const roles_decorator_js_1 = require("../auth/decorators/roles.decorator.js");
+const user_entity_js_1 = require("../user/domain/user.entity.js");
 const presence_service_js_1 = require("./presence.service.js");
 const create_presence_dto_js_1 = require("./dto/create-presence.dto.js");
 let PresenceController = class PresenceController {
@@ -44,6 +48,8 @@ __decorate([
 ], PresenceController.prototype, "findAll", null);
 exports.PresenceController = PresenceController = __decorate([
     (0, common_1.Controller)('presences'),
+    (0, common_1.UseGuards)(jwt_auth_guard_js_1.JwtAuthGuard, roles_guard_js_1.RolesGuard),
+    (0, roles_decorator_js_1.Roles)(user_entity_js_1.UserRole.ADMIN),
     __metadata("design:paramtypes", [presence_service_js_1.PresenceService])
 ], PresenceController);
 //# sourceMappingURL=presence.controller.js.map

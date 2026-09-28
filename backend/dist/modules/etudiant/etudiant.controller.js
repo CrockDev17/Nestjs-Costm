@@ -14,6 +14,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EtudiantController = void 0;
 const common_1 = require("@nestjs/common");
+const jwt_auth_guard_js_1 = require("../auth/guards/jwt-auth.guard.js");
+const roles_guard_js_1 = require("../auth/guards/roles.guard.js");
+const roles_decorator_js_1 = require("../auth/decorators/roles.decorator.js");
+const user_entity_js_1 = require("../user/domain/user.entity.js");
 const etudiant_service_js_1 = require("./etudiant.service.js");
 const create_etudiant_dto_js_1 = require("./dto/create-etudiant.dto.js");
 let EtudiantController = class EtudiantController {
@@ -54,6 +58,8 @@ __decorate([
 ], EtudiantController.prototype, "findOne", null);
 exports.EtudiantController = EtudiantController = __decorate([
     (0, common_1.Controller)('etudiants'),
+    (0, common_1.UseGuards)(jwt_auth_guard_js_1.JwtAuthGuard, roles_guard_js_1.RolesGuard),
+    (0, roles_decorator_js_1.Roles)(user_entity_js_1.UserRole.ADMIN),
     __metadata("design:paramtypes", [etudiant_service_js_1.EtudiantService])
 ], EtudiantController);
 //# sourceMappingURL=etudiant.controller.js.map
