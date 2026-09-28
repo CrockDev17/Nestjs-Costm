@@ -1,14 +1,15 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  UseGuards
+    Controller,
+    Get,
+    Post,
+    Body,
+    Param,
+    UseGuards,
+    Req
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
-import { Roles } from '../auth/decorators/roles.decorator.js'; 
+import { Roles } from '../auth/decorators/roles.decorator.js';
 import { UserRole } from '../user/domain/user.entity.js';
 
 import { PaiementService } from './paiement.service.js';
@@ -19,22 +20,29 @@ import { CreatePaiementDto } from './dto/create-paiement.dto.js';
 @Roles(UserRole.ADMIN)
 
 export class PaiementController {
-  constructor(
-    private readonly paiementService: PaiementService,
-  ) {}
+    constructor(
+        private readonly paiementService: PaiementService,
+    ) { }
 
-  @Post()
-  create(@Body() createPaiementDto: CreatePaiementDto) {
-    return this.paiementService.create(createPaiementDto);
-  }
+    @Post()
+    create(@Body() createPaiementDto: CreatePaiementDto) {
+        return this.paiementService.create(createPaiementDto);
+    }
 
-  @Get()
-  findAll() {
-    return this.paiementService.findAll();
-  }
+    @Get()
+    findAll() {
+        return this.paiementService.findAll();
+    }
+    @Get('me')
+    @UseGuards(JwtAuthGuard)
+    findMyPaiements(@Req() req: any) {
+        return this.paiementService.findMyPaiements(
+            req.user.sub,
+        );
+    }
+    @Get(':id')
+    findOne(@Param('id') id: string) {
+        return this.paiementService.findOne(id);
+    }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.paiementService.findOne(id);
-  }
 }

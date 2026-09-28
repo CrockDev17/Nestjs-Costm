@@ -1,70 +1,102 @@
 import {
-  Injectable,
-  NotFoundException,
+    Injectable,
+    NotFoundException,
 } from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-
+import { User } from '../user/domain/user.entity.js';
 import { Note } from './domain/note.entity.js';
 import { Etudiant } from '../etudiant/domain/etudiant.entity.js';
 import { CreateNoteDto } from './dto/create-note.dto.js';
 
 @Injectable()
 export class NoteService {
-  constructor(
-    @InjectRepository(Note)
-    private readonly noteRepository: Repository<Note>,
+    constructor(
+        @InjectRepository(Note)
+        private readonly noteRepository: Repository<Note>,
 
-    @InjectRepository(Etudiant)
-    private readonly etudiantRepository: Repository<Etudiant>,
-  ) {}
+        @InjectRepository(Etudiant)
+        private readonly etudiantRepository: Repository<Etudiant>,
 
-  async create(
-    createNoteDto: CreateNoteDto,
-  ): Promise<Note> {
-    const { etudiantId, ...noteData } = createNoteDto;
+        @InjectRepository(User)
+        private readonly userRepository: Repository<User>,
+    ) { }
 
-    const etudiant = await this.etudiantRepository.findOne({
-      where: { id: etudiantId },
-    });
+    async create(
+        createNoteDto: CreateNoteDto,
+    ): Promise<Note> {
+        const { etudiantId, ...noteData } = createNoteDto;
 
-    if (!etudiant) {
-      throw new NotFoundException(
-        'Étudiant introuvable pour cette note',
-      );
+        const etudiant = await this.etudiantRepository.findOne({
+            where: { id: etudiantId },
+        });
+
+        if (!etudiant) {
+            throw new NotFoundException(
+                'Étudiant introuvable pour cette note',
+            );
+        }
+
+        const note = this.noteRepository.create({
+            ...noteData,
+            etudiant,
+        });
+
+        return await this.noteRepository.save(note);
     }
 
-    const note = this.noteRepository.create({
-      ...noteData,
-      etudiant,
-    });
-
-    return await this.noteRepository.save(note);
-  }
-
-  async findAll(): Promise<Note[]> {
-    return await this.noteRepository.find({
-      relations: {
-        etudiant: true,
-      },
-    });
-  }
-
-  async findOne(id: string): Promise<Note> {
-    const note = await this.noteRepository.findOne({
-      where: { id },
-      relations: {
-        etudiant: true,
-      },
-    });
-
-    if (!note) {
-      throw new NotFoundException(
-        `Note avec l'ID ${id} non trouvée`,
-      );
+    async findAll(): Promise<Note[]> {
+        return await this.noteRepository.find({
+            relations: {
+                etudiant: true,
+            },
+        });
     }
 
-    return note;
-  }
+    async findOne(id: string): Promise<Note> {
+        const note = await this.noteRepository.findOne({
+            where: { id },
+            relations: {
+                etudiant: true,
+            },
+        });
+
+        if (!note) {
+            throw new NotFoundException(
+                `Note avec l'ID ${id} non trouvée`,
+            );
+        }
+
+        return note;
+    }
+
+    async findMyNotes(userId: string): Promise<Note[]> {
+        const user = await this.userRepository.findOne({
+            where: { id: userId },
+            relations: {
+                etudiant: true,
+            },
+        });
+
+        if (!user) {
+            throw new NotFoundException(
+                'Utilisateur introuvable',
+            );
+        }
+
+        if (!user.etudiant) {
+            throw new NotFoundException(
+                'Aucun étudiant associé à cet utilisateur',
+            );
+        }
+
+        return await this.noteRepository.find({
+            where: {
+                etudiant: {
+                    id: user.etudiant.id,
+                },
+            },
+        });
+    }
 }

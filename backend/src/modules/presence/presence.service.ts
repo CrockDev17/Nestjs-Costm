@@ -5,7 +5,7 @@ import {
 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-
+import { User } from '../user/domain/user.entity.js';
 import { Presence } from './presence.entity.js';
 import { CreatePresenceDto } from './dto/create-presence.dto.js';
 import { Etudiant } from '../etudiant/domain/etudiant.entity.js';
@@ -18,7 +18,10 @@ export class PresenceService {
 
     @InjectRepository(Etudiant)
     private readonly etudiantRepository: Repository<Etudiant>,
-  ) {}
+
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>
+  ) { }
 
   async create(
     createPresenceDto: CreatePresenceDto,
@@ -48,6 +51,36 @@ export class PresenceService {
     return await this.presenceRepository.find({
       relations: {
         etudiant: true,
+      },
+    });
+  }
+  async findMyPresences(
+    userId: string,
+  ): Promise<Presence[]> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: {
+        etudiant: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException(
+        'Utilisateur introuvable',
+      );
+    }
+
+    if (!user.etudiant) {
+      throw new NotFoundException(
+        'Aucun étudiant associé à cet utilisateur',
+      );
+    }
+
+    return await this.presenceRepository.find({
+      where: {
+        etudiant: {
+          id: user.etudiant.id,
+        },
       },
     });
   }
