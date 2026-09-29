@@ -16,19 +16,24 @@ exports.PresenceService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const presence_entity_js_1 = require("./presence.entity.js");
-const etudiant_entity_js_1 = require("../etudiant/domain/etudiant.entity.js");
+const presence_entity_1 = require("./presence.entity");
+const etudiant_entity_1 = require("../etudiant/domain/etudiant.entity");
+const user_entity_1 = require("../user/domain/user.entity");
 let PresenceService = class PresenceService {
     presenceRepository;
     etudiantRepository;
-    constructor(presenceRepository, etudiantRepository) {
+    userRepository;
+    constructor(presenceRepository, etudiantRepository, userRepository) {
         this.presenceRepository = presenceRepository;
         this.etudiantRepository = etudiantRepository;
+        this.userRepository = userRepository;
     }
     async create(createPresenceDto) {
         const { etudiantId, ...presenceData } = createPresenceDto;
         const etudiant = await this.etudiantRepository.findOne({
-            where: { id: etudiantId },
+            where: {
+                id: etudiantId,
+            },
         });
         if (!etudiant) {
             throw new common_1.NotFoundException('Étudiant introuvable pour la présence');
@@ -46,13 +51,58 @@ let PresenceService = class PresenceService {
             },
         });
     }
+    async findOne(id) {
+        const presence = await this.presenceRepository.findOne({
+            where: {
+                id,
+            },
+            relations: {
+                etudiant: true,
+            },
+        });
+        if (!presence) {
+            throw new common_1.NotFoundException(`Présence avec l'ID ${id} non trouvée`);
+        }
+        return presence;
+    }
+    async findMyPresences(userId) {
+        const user = await this.userRepository.findOne({
+            where: {
+                id: userId,
+            },
+            relations: {
+                etudiant: true,
+            },
+        });
+        if (!user) {
+            throw new common_1.NotFoundException('Utilisateur introuvable');
+        }
+        if (!user.etudiant) {
+            throw new common_1.NotFoundException('Aucun étudiant associé à cet utilisateur');
+        }
+        return await this.presenceRepository.find({
+            where: {
+                etudiant: {
+                    id: user.etudiant.id,
+                },
+            },
+            relations: {
+                etudiant: true,
+            },
+            order: {
+                date: 'DESC',
+            },
+        });
+    }
 };
 exports.PresenceService = PresenceService;
 exports.PresenceService = PresenceService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(presence_entity_js_1.Presence)),
-    __param(1, (0, typeorm_1.InjectRepository)(etudiant_entity_js_1.Etudiant)),
+    __param(0, (0, typeorm_1.InjectRepository)(presence_entity_1.Presence)),
+    __param(1, (0, typeorm_1.InjectRepository)(etudiant_entity_1.Etudiant)),
+    __param(2, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository])
 ], PresenceService);
 //# sourceMappingURL=presence.service.js.map

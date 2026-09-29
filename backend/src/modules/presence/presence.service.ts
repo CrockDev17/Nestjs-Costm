@@ -5,10 +5,11 @@ import {
 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../user/domain/user.entity.js';
-import { Presence } from './presence.entity.js';
-import { CreatePresenceDto } from './dto/create-presence.dto.js';
-import { Etudiant } from '../etudiant/domain/etudiant.entity.js';
+
+import { Presence } from './presence.entity';
+import { CreatePresenceDto } from './dto/create-presence.dto';
+import { Etudiant } from '../etudiant/domain/etudiant.entity';
+import { User } from '../user/domain/user.entity';
 
 @Injectable()
 export class PresenceService {
@@ -20,18 +21,27 @@ export class PresenceService {
     private readonly etudiantRepository: Repository<Etudiant>,
 
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>
-  ) { }
+    private readonly userRepository: Repository<User>,
+  ) {}
+
+  // ==========================================
+  // CRÉER UNE PRÉSENCE
+  // ==========================================
 
   async create(
     createPresenceDto: CreatePresenceDto,
   ): Promise<Presence> {
+    const {
+      etudiantId,
+      ...presenceData
+    } = createPresenceDto;
 
-    const { etudiantId, ...presenceData } = createPresenceDto;
-
-    const etudiant = await this.etudiantRepository.findOne({
-      where: { id: etudiantId },
-    });
+    const etudiant =
+      await this.etudiantRepository.findOne({
+        where: {
+          id: etudiantId,
+        },
+      });
 
     if (!etudiant) {
       throw new NotFoundException(
@@ -39,13 +49,20 @@ export class PresenceService {
       );
     }
 
-    const presence = this.presenceRepository.create({
-      ...presenceData,
-      etudiant,
-    });
+    const presence =
+      this.presenceRepository.create({
+        ...presenceData,
+        etudiant,
+      });
 
-    return await this.presenceRepository.save(presence);
+    return await this.presenceRepository.save(
+      presence,
+    );
   }
+
+  // ==========================================
+  // TOUTES LES PRÉSENCES
+  // ==========================================
 
   async findAll(): Promise<Presence[]> {
     return await this.presenceRepository.find({
@@ -54,15 +71,50 @@ export class PresenceService {
       },
     });
   }
+
+  // ==========================================
+  // UNE PRÉSENCE PAR ID
+  // ADMIN
+  // ==========================================
+
+  async findOne(
+    id: string,
+  ): Promise<Presence> {
+    const presence =
+      await this.presenceRepository.findOne({
+        where: {
+          id,
+        },
+        relations: {
+          etudiant: true,
+        },
+      });
+
+    if (!presence) {
+      throw new NotFoundException(
+        `Présence avec l'ID ${id} non trouvée`,
+      );
+    }
+
+    return presence;
+  }
+
+  // ==========================================
+  // PRÉSENCES DE L'ÉTUDIANT CONNECTÉ
+  // ==========================================
+
   async findMyPresences(
     userId: string,
   ): Promise<Presence[]> {
-    const user = await this.userRepository.findOne({
-      where: { id: userId },
-      relations: {
-        etudiant: true,
-      },
-    });
+    const user =
+      await this.userRepository.findOne({
+        where: {
+          id: userId,
+        },
+        relations: {
+          etudiant: true,
+        },
+      });
 
     if (!user) {
       throw new NotFoundException(
@@ -81,6 +133,12 @@ export class PresenceService {
         etudiant: {
           id: user.etudiant.id,
         },
+      },
+      relations: {
+        etudiant: true,
+      },
+      order: {
+        date: 'DESC',
       },
     });
   }

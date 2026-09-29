@@ -4,5 +4,7 @@ export declare class PresenceController {
     private readonly presenceService;
     constructor(presenceService: PresenceService);
     create(createPresenceDto: CreatePresenceDto): Promise<import("./presence.entity.js").Presence>;
+    findMyPresences(req: any): Promise<import("./presence.entity.js").Presence[]>;
     findAll(): Promise<import("./presence.entity.js").Presence[]>;
+    findOne(id: string): Promise<import("./presence.entity.js").Presence>;
 }

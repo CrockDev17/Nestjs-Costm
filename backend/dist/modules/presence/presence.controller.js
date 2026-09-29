@@ -14,12 +14,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PresenceController = void 0;
 const common_1 = require("@nestjs/common");
+const presence_service_js_1 = require("./presence.service.js");
+const create_presence_dto_js_1 = require("./dto/create-presence.dto.js");
 const jwt_auth_guard_js_1 = require("../auth/guards/jwt-auth.guard.js");
 const roles_guard_js_1 = require("../auth/guards/roles.guard.js");
 const roles_decorator_js_1 = require("../auth/decorators/roles.decorator.js");
 const user_entity_js_1 = require("../user/domain/user.entity.js");
-const presence_service_js_1 = require("./presence.service.js");
-const create_presence_dto_js_1 = require("./dto/create-presence.dto.js");
 let PresenceController = class PresenceController {
     presenceService;
     constructor(presenceService) {
@@ -28,28 +28,53 @@ let PresenceController = class PresenceController {
     create(createPresenceDto) {
         return this.presenceService.create(createPresenceDto);
     }
+    findMyPresences(req) {
+        return this.presenceService.findMyPresences(req.user.sub);
+    }
     findAll() {
         return this.presenceService.findAll();
+    }
+    findOne(id) {
+        return this.presenceService.findOne(id);
     }
 };
 exports.PresenceController = PresenceController;
 __decorate([
     (0, common_1.Post)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_js_1.JwtAuthGuard, roles_guard_js_1.RolesGuard),
+    (0, roles_decorator_js_1.Roles)(user_entity_js_1.UserRole.ADMIN),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_presence_dto_js_1.CreatePresenceDto]),
     __metadata("design:returntype", void 0)
 ], PresenceController.prototype, "create", null);
 __decorate([
+    (0, common_1.Get)('me'),
+    (0, common_1.UseGuards)(jwt_auth_guard_js_1.JwtAuthGuard),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], PresenceController.prototype, "findMyPresences", null);
+__decorate([
     (0, common_1.Get)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_js_1.JwtAuthGuard, roles_guard_js_1.RolesGuard),
+    (0, roles_decorator_js_1.Roles)(user_entity_js_1.UserRole.ADMIN),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], PresenceController.prototype, "findAll", null);
-exports.PresenceController = PresenceController = __decorate([
-    (0, common_1.Controller)('presences'),
+__decorate([
+    (0, common_1.Get)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_js_1.JwtAuthGuard, roles_guard_js_1.RolesGuard),
     (0, roles_decorator_js_1.Roles)(user_entity_js_1.UserRole.ADMIN),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], PresenceController.prototype, "findOne", null);
+exports.PresenceController = PresenceController = __decorate([
+    (0, common_1.Controller)('presences'),
     __metadata("design:paramtypes", [presence_service_js_1.PresenceService])
 ], PresenceController);
 //# sourceMappingURL=presence.controller.js.map

@@ -16,34 +16,60 @@ exports.EtudiantService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const etudiant_entity_js_1 = require("./domain/etudiant.entity.js");
+const etudiant_entity_1 = require("./domain/etudiant.entity");
+const user_entity_js_1 = require("../user/domain/user.entity.js");
 let EtudiantService = class EtudiantService {
     etudiantRepository;
-    constructor(etudiantRepository) {
+    userRepository;
+    constructor(etudiantRepository, userRepository) {
         this.etudiantRepository = etudiantRepository;
+        this.userRepository = userRepository;
     }
     async create(createEtudiantDto) {
         const etudiant = this.etudiantRepository.create(createEtudiantDto);
         return await this.etudiantRepository.save(etudiant);
     }
     async findAll() {
-        return await this.etudiantRepository.find({ relations: { presences: true, } });
+        return await this.etudiantRepository.find({
+            relations: {
+                presences: true,
+            },
+        });
     }
     async findOne(id) {
         const etudiant = await this.etudiantRepository.findOne({
             where: { id },
-            relations: { presences: true },
+            relations: {
+                presences: true,
+            },
         });
         if (!etudiant) {
             throw new common_1.NotFoundException(`Étudiant avec l'ID ${id} non trouvé`);
         }
         return etudiant;
     }
+    async findMe(userId) {
+        const user = await this.userRepository.findOne({
+            where: { id: userId },
+            relations: {
+                etudiant: true,
+            },
+        });
+        if (!user) {
+            throw new common_1.NotFoundException('Utilisateur introuvable');
+        }
+        if (!user.etudiant) {
+            throw new common_1.NotFoundException('Aucun étudiant associé à cet utilisateur');
+        }
+        return user.etudiant;
+    }
 };
 exports.EtudiantService = EtudiantService;
 exports.EtudiantService = EtudiantService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(etudiant_entity_js_1.Etudiant)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __param(0, (0, typeorm_1.InjectRepository)(etudiant_entity_1.Etudiant)),
+    __param(1, (0, typeorm_1.InjectRepository)(user_entity_js_1.User)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository])
 ], EtudiantService);
 //# sourceMappingURL=etudiant.service.js.map

@@ -33,4 +33,4 @@ import { AuthModule } from './modules/auth/auth.module.js';
     AuthModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

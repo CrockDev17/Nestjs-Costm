@@ -12,15 +12,28 @@ const typeorm_1 = require("@nestjs/typeorm");
 const etudiant_entity_js_1 = require("./domain/etudiant.entity.js");
 const etudiant_service_js_1 = require("./etudiant.service.js");
 const etudiant_controller_js_1 = require("./etudiant.controller.js");
+const user_entity_js_1 = require("../user/domain/user.entity.js");
 let EtudiantModule = class EtudiantModule {
 };
 exports.EtudiantModule = EtudiantModule;
 exports.EtudiantModule = EtudiantModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([etudiant_entity_js_1.Etudiant])],
-        controllers: [etudiant_controller_js_1.EtudiantController],
-        providers: [etudiant_service_js_1.EtudiantService],
-        exports: [etudiant_service_js_1.EtudiantService, typeorm_1.TypeOrmModule],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([
+                etudiant_entity_js_1.Etudiant,
+                user_entity_js_1.User,
+            ]),
+        ],
+        controllers: [
+            etudiant_controller_js_1.EtudiantController,
+        ],
+        providers: [
+            etudiant_service_js_1.EtudiantService,
+        ],
+        exports: [
+            etudiant_service_js_1.EtudiantService,
+            typeorm_1.TypeOrmModule,
+        ],
     })
 ], EtudiantModule);
 //# sourceMappingURL=etudiant.module.js.map
