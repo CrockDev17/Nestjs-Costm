@@ -1,54 +1,95 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { 
+  Megaphone, 
+  BookOpen, 
+  FileText, 
+  Clock, 
+  CreditCard, 
+  QrCode, 
+  LogOut 
+} from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
-  const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
-  };
-
-  const menuItems = [
-    { path: '/annonces-generales', label: '📢 Annonces Générales' },
-    { path: '/annonces-specifiques', label: '🎯 Annonces Spécifiques' },
-    { path: '/programme', label: '📚 Programme & Cours' },
-    { path: '/evaluations', label: '📝 Évaluations & Résultats' },
-    { path: '/presences', label: '⏱️ Présence & Assiduité' },
-    { path: '/scolarite', label: '💳 Scolarité & Droit' },
-    { path: '/certificat', label: '🎓 Mon Certificat QR' },
-    { path: '/profil', label: '👤 Profil & Notifications' },
-  ];
+  const isActive = (path: string) => location.pathname === path;
 
   return (
-    <aside style={{ width: '260px', backgroundColor: '#0f172a', color: '#fff', minHeight: '100vh', padding: '1rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-      <div>
-        <h2 style={{ fontSize: '1.2rem', color: '#38bdf8', marginBottom: '1.5rem' }}>🎓 Espace Étudiant</h2>
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {menuItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              style={({ isActive }) => ({
-                padding: '0.6rem 0.8rem',
-                borderRadius: '6px',
-                color: isActive ? '#38bdf8' : '#cbd5e1',
-                backgroundColor: isActive ? '#1e293b' : 'transparent',
-                textDecoration: 'none',
-                fontWeight: isActive ? 'bold' : 'normal',
-              })}
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
+    <aside className="w-72 bg-slate-900 text-slate-200 flex flex-col shadow-xl h-screen sticky top-0">
+      <div className="p-6 border-b border-slate-800">
+        <h1 className="text-xl font-bold text-white tracking-wide">ENI - Espace Étudiant</h1>
+        <p className="text-xs text-slate-400 mt-1">Filière Informatique Générale</p>
       </div>
-      <button
-        onClick={handleLogout}
-        style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', padding: '0.6rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
-      >
-        Déconnexion
-      </button>
+
+      <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1">
+        <Link 
+          to="/annonces" 
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+            isActive('/annonces') ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white'
+          }`}
+        >
+          <Megaphone className="w-5 h-5 text-indigo-400" />
+          <span>Annonces & Actualités</span>
+        </Link>
+
+        <Link 
+          to="/programme" 
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+            isActive('/programme') ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white'
+          }`}
+        >
+          <BookOpen className="w-5 h-5 text-emerald-400" />
+          <span>Programme & Cours</span>
+        </Link>
+
+        <Link 
+          to="/evaluations" 
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+            isActive('/evaluations') ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white'
+          }`}
+        >
+          <FileText className="w-5 h-5 text-yellow-400" />
+          <span>Évaluations & Résultats</span>
+        </Link>
+
+        <Link 
+          to="/presence" 
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+            isActive('/presence') ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white'
+          }`}
+        >
+          <Clock className="w-5 h-5 text-cyan-400" />
+          <span>Présence & Assiduité</span>
+        </Link>
+
+        <Link 
+          to="/scolarite" 
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+            isActive('/scolarite') ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white'
+          }`}
+        >
+          <CreditCard className="w-5 h-5 text-orange-400" />
+          <span>Scolarité & Paiement</span>
+        </Link>
+
+        <Link 
+          to="/certificat" 
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+            isActive('/certificat') ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white'
+          }`}
+        >
+          <QrCode className="w-5 h-5 text-purple-400" />
+          <span>Mon Certificat QR</span>
+        </Link>
+      </nav>
+
+      <div className="p-4 border-t border-slate-800">
+        <button className="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-red-600/20 hover:text-red-400 text-slate-300 py-2.5 px-4 rounded-lg text-sm font-medium transition-all">
+          <LogOut className="w-4 h-4" />
+          <span>Déconnexion</span>
+        </button>
+      </div>
     </aside>
   );
 };
