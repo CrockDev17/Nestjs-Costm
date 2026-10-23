@@ -1,0 +1,184 @@
+/* COSTM - adaptation mobile sans remplacer le design desktop */
+.mobile-menu-toggle,
+.mobile-menu-overlay {
+  display: none;
+}
+
+.app-layout,
+.app-main,
+.app-content {
+  min-width: 0;
+}
+
+.app-content img,
+.app-content canvas,
+.app-content video {
+  max-width: 100%;
+}
+
+@media (max-width: 720px) {
+  .app-layout {
+    flex-direction: row !important;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .app-sidebar {
+    position: fixed !important;
+    z-index: 1001;
+    inset: 0 auto 0 0;
+    width: min(290px, 86vw) !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    flex: 0 0 auto !important;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    transform: translateX(-105%);
+    visibility: hidden;
+    transition: transform 220ms ease, visibility 220ms ease;
+    box-shadow: 12px 0 32px rgb(0 0 0 / 18%);
+  }
+
+  .app-sidebar.mobile-open {
+    transform: translateX(0);
+    visibility: visible;
+  }
+
+  .sidebar-nav {
+    display: flex !important;
+    flex-direction: column;
+    grid-template-columns: none !important;
+  }
+
+  .sidebar-link {
+    min-height: 46px;
+  }
+
+  .mobile-menu-toggle {
+    display: inline-flex;
+    flex: 0 0 42px;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border: 1px solid #d7deea;
+    border-radius: 10px;
+    background: var(--surface, #fff);
+    color: var(--text-primary, #172b4d);
+    font-size: 22px;
+    cursor: pointer;
+  }
+
+  .mobile-menu-overlay {
+    display: block;
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: rgb(8 18 34 / 55%);
+  }
+
+  .app-main {
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  .app-header {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 14px !important;
+  }
+
+  .header-context {
+    flex: 1 1 160px;
+    min-width: 0;
+  }
+
+  .header-context strong {
+    font-size: clamp(15px, 4vw, 20px);
+    overflow-wrap: anywhere;
+  }
+
+  .header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 100%;
+  }
+
+  .header-actions button {
+    min-height: 42px;
+    max-width: 100%;
+  }
+
+  .app-content {
+    padding: 14px 12px !important;
+    min-width: 0;
+  }
+
+  .app-content form {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .app-content input,
+  .app-content select,
+  .app-content textarea,
+  .app-content button {
+    max-width: 100%;
+  }
+
+  .app-content table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .page-container {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 14px !important;
+  }
+
+  .page-container table {
+    min-width: 600px;
+  }
+
+  .app-footer {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 380px) {
+  .app-header {
+    padding: 10px !important;
+  }
+
+  .app-content {
+    padding: 10px 8px !important;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .header-actions button {
+    flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-sidebar {
+    transition: none;
+  }
+}
+/* FIN COSTM RESPONSIVE */

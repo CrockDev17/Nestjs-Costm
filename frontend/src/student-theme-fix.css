@@ -1,0 +1,100 @@
+/* COSTM - correction forte du contraste du portail étudiant */
+
+/* Thème sombre : gris clair et blanc pour les titres et textes */
+html.dark .student-page,
+html.dark-mode .student-page,
+html[data-theme="dark"] .student-page,
+body.dark .student-page,
+body.dark-mode .student-page,
+body[data-theme="dark"] .student-page,
+body[data-mode="dark"] .student-page,
+.dark .student-page,
+.dark-mode .student-page,
+[data-theme="dark"] .student-page {
+  color: #e2e8f0 !important;
+}
+
+/* Titres principaux et secondaires : Annonces, Cours, Présence, etc. */
+.student-page h1,
+.student-page h2,
+.student-page h3,
+.student-page h4,
+.student-page h5,
+.student-page h6,
+.student-page .portal-eyebrow,
+.student-page .section-title,
+.student-page .page-title,
+.student-page .card-title {
+  color: #f1f5f9 !important;
+}
+
+/* Textes descriptifs, messages vides, consignes et niveaux */
+.student-page p,
+.student-page li,
+.student-page label,
+.student-page small,
+.student-page span,
+.student-page dt,
+.student-page dd,
+.student-page .description,
+.student-page .empty-state,
+.student-page .empty-message,
+.student-page .muted {
+  color: #cbd5e1 !important;
+}
+
+/* Les éléments importants gardent une bonne visibilité */
+.student-page strong,
+.student-page b {
+  color: #f8fafc !important;
+}
+
+/* Cartes et panneaux : gris ardoise moyen, moins sombre */
+.student-page section,
+.student-page article,
+.student-page .dashboard-card,
+.student-page .program-card,
+.student-page .programme-card,
+.student-page .announcement-card,
+.student-page .annonce-card,
+.student-page .empty-state,
+.student-page .empty-message {
+  border-color: #475569;
+}
+
+/* Badges et codes de formation */
+.student-page code,
+.student-page .badge,
+.student-page .tag,
+.student-page .program-code,
+.student-page .programme-code,
+.student-page .level-badge,
+.student-page .niveau-badge {
+  background-color: #334155;
+  color: #f1f5f9 !important;
+  border-color: #64748b;
+}
+
+/* Présence et scanner QR : titre, consignes et icônes */
+.student-page button,
+.student-page button span,
+.student-page [role="button"] {
+  color: #f8fafc;
+}
+
+.student-page button {
+  border-color: #64748b;
+}
+
+/* Thème clair : texte gris foncé sur fond clair */
+html:not(.dark):not(.dark-mode):not([data-theme="dark"]) body:not(.dark):not(.dark-mode):not([data-theme="dark"]) .student-page h1,
+html:not(.dark):not(.dark-mode):not([data-theme="dark"]) body:not(.dark):not(.dark-mode):not([data-theme="dark"]) .student-page h2,
+html:not(.dark):not(.dark-mode):not([data-theme="dark"]) body:not(.dark):not(.dark-mode):not([data-theme="dark"]) .student-page h3 {
+  color: #334155 !important;
+}
+
+html:not(.dark):not(.dark-mode):not([data-theme="dark"]) body:not(.dark):not(.dark-mode):not([data-theme="dark"]) .student-page p,
+html:not(.dark):not(.dark-mode):not([data-theme="dark"]) body:not(.dark):not(.dark-mode):not([data-theme="dark"]) .student-page span,
+html:not(.dark):not(.dark-mode):not([data-theme="dark"]) body:not(.dark):not(.dark-mode):not([data-theme="dark"]) .student-page label {
+  color: #475569 !important;
+}
