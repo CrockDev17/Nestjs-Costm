@@ -1,1 +1,428 @@
-@import "tailwindcss";
+:root {
+  font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+  color: #172b4d;
+  background: #f4f6fa;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #f4f6fa;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font-size: 14px;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+a {
+  color: inherit;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  text-align: left;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1,
+h2,
+h3 {
+  color: #172b4d;
+}
+
+input,
+select,
+textarea {
+  color: #172b4d;
+  background: #fff;
+  color-scheme: light;
+}
+
+::selection {
+  color: #fff;
+  background: #244a7c;
+}
+/* ===== COSTM : lisibilité et thèmes ===== */
+:root {
+  --costm-heading: #172b49;
+  --costm-body: #42536b;
+  --costm-card: #ffffff;
+  --costm-border: #dbe4ef;
+  --costm-theme-button-bg: #ffffff;
+  --costm-theme-button-text: #172b49;
+  --costm-theme-button-border: #b8873c;
+}
+
+/* Thème sombre : titres et sous-titres clairement lisibles */
+.dark,
+.dark-mode,
+[data-theme="dark"],
+[data-mode="dark"],
+body.dark,
+body.dark-mode {
+  --costm-heading: #f1f5ff;
+  --costm-body: #c4d2e5;
+  --costm-card: #111e31;
+  --costm-border: #2b3d56;
+  --costm-theme-button-bg: #17263c;
+  --costm-theme-button-text: #ffffff;
+  --costm-theme-button-border: #d6a85f;
+}
+
+/* Titres du portail étudiant */
+.student-page h1,
+.student-page h2,
+.student-page h3,
+.student-page .dashboard-card h1,
+.student-page .dashboard-card h2,
+.student-page .dashboard-card h3,
+.student-page .student-records h2,
+.student-page .student-profile h2,
+.page-container.student-page h1,
+.page-container.student-page h2 {
+  color: var(--costm-heading);
+  line-height: 1.35;
+  font-weight: 750;
+}
+
+.student-page p,
+.student-page li,
+.student-page .dashboard-card p {
+  color: var(--costm-body);
+  line-height: 1.65;
+}
+
+.student-page .dashboard-card {
+  border: 1px solid var(--costm-border);
+  border-radius: 16px;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.student-page .dashboard-card:hover {
+  border-color: #b8873c;
+  box-shadow: 0 8px 24px rgba(15, 35, 60, .08);
+}
+
+/* Bouton de thème : visible en clair comme en sombre */
+.app-header .theme-toggle,
+.app-header .theme-toggle-button,
+.app-header .theme-switch,
+.app-header button[aria-label*="thème" i],
+.app-header button[aria-label*="theme" i],
+.app-header button[aria-label*="mode" i] {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 10px 15px;
+  border: 1px solid var(--costm-theme-button-border) !important;
+  border-radius: 10px;
+  background: var(--costm-theme-button-bg) !important;
+  color: var(--costm-theme-button-text) !important;
+  font-weight: 700;
+  opacity: 1 !important;
+  visibility: visible !important;
+  cursor: pointer;
+  box-shadow: 0 2px 7px rgba(15, 35, 60, .08);
+}
+
+.app-header .theme-toggle:hover,
+.app-header .theme-toggle-button:hover,
+.app-header .theme-switch:hover,
+.app-header button[aria-label*="thème" i]:hover,
+.app-header button[aria-label*="theme" i]:hover,
+.app-header button[aria-label*="mode" i]:hover {
+  filter: brightness(.96);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .student-page .dashboard-card {
+    border-radius: 12px;
+  }
+
+  .app-header .theme-toggle,
+  .app-header .theme-toggle-button,
+  .app-header .theme-switch {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+}
+/* ===== Fin amélioration thème COSTM ===== */
+
+/* ===== COSTM : thème plus clair et confortable ===== */
+
+/* Fond gris très clair et cartes blanches en mode clair */
+html:not(.dark):not(.dark-mode) body:not(.dark):not(.dark-mode):not([data-theme="dark"]) {
+  --costm-heading: #24364b;
+  --costm-body: #4b5b6e;
+  --costm-card: #ffffff;
+  --costm-border: #e0e6ed;
+}
+
+/* Couleurs plus douces en mode sombre */
+html.dark,
+html.dark-mode,
+html[data-theme="dark"],
+body.dark,
+body.dark-mode,
+body[data-theme="dark"],
+body[data-mode="dark"] {
+  --costm-heading: #f1f5f9;
+  --costm-body: #d1d9e4;
+  --costm-card: #202b3b;
+  --costm-border: #3b485b;
+}
+
+/* Titres principaux : fini le texte bleu presque noir */
+.student-page h1,
+.student-page h2,
+.student-page h3,
+.student-page .dashboard-card h1,
+.student-page .dashboard-card h2,
+.student-page .dashboard-card h3,
+.page-container.student-page h1,
+.page-container.student-page h2 {
+  color: var(--costm-heading, #24364b) !important;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+/* Texte courant, descriptions et messages */
+.student-page p,
+.student-page li,
+.student-page .dashboard-card p,
+.student-page .dashboard-card span {
+  color: var(--costm-body, #4b5b6e);
+}
+
+/* Cartes : fond blanc en clair, gris doux en sombre */
+.student-page .dashboard-card {
+  background-color: var(--costm-card, #ffffff);
+  border-color: var(--costm-border, #e0e6ed);
+  border-radius: 15px;
+}
+
+/* Titres et cartes des pages du portail étudiant */
+.student-page {
+  color: var(--costm-body, #4b5b6e);
+}
+
+.student-page .portal-eyebrow {
+  color: #b1843d !important;
+}
+
+/* Bouton de thème toujours visible */
+.app-header button[aria-label*="thème" i],
+.app-header button[aria-label*="theme" i],
+.app-header button[aria-label*="mode" i],
+.app-header .theme-toggle,
+.app-header .theme-toggle-button,
+.app-header .theme-switch {
+  background: #f1f3f6 !important;
+  color: #26364a !important;
+  border: 1px solid #aab6c5 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  font-weight: 700;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(30, 45, 65, .08);
+}
+
+/* En mode sombre, bouton gris clair pour le distinguer du fond */
+html.dark .app-header button[aria-label*="mode" i],
+html.dark-mode .app-header button[aria-label*="mode" i],
+body.dark .app-header button[aria-label*="mode" i],
+body.dark-mode .app-header button[aria-label*="mode" i],
+html[data-theme="dark"] .app-header button[aria-label*="mode" i],
+body[data-theme="dark"] .app-header button[aria-label*="mode" i],
+html.dark .app-header .theme-toggle,
+html.dark-mode .app-header .theme-toggle,
+body.dark .app-header .theme-toggle,
+body.dark-mode .app-header .theme-toggle {
+  background: #e2e8f0 !important;
+  color: #1e293b !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* ===== Fin du thème clair COSTM ===== */
+
+/* ==========================================================
+   COSTM - AMELIORATION DE LISIBILITE DU PORTAIL ETUDIANT
+   Titres, textes, cartes, annonces et programmes
+   ========================================================== */
+
+/* Couleurs du thème clair */
+html:not(.dark):not(.dark-mode):not([data-theme="dark"]) body:not(.dark):not(.dark-mode):not([data-theme="dark"]) .student-page {
+  --portal-title: #29384b;
+  --portal-text: #536174;
+  --portal-muted: #68778a;
+  --portal-card-bg: #ffffff;
+  --portal-card-border: #e1e7ef;
+  --portal-tag-bg: #edf2f7;
+  --portal-tag-text: #34465c;
+}
+
+/* Couleurs du thème sombre : éclaircir les textes sans noircir les cartes */
+html.dark .student-page,
+html.dark-mode .student-page,
+html[data-theme="dark"] .student-page,
+body.dark .student-page,
+body.dark-mode .student-page,
+body[data-theme="dark"] .student-page,
+body[data-mode="dark"] .student-page {
+  --portal-title: #f1f5f9;
+  --portal-text: #d6deea;
+  --portal-muted: #b8c5d6;
+  --portal-card-bg: #1c293b;
+  --portal-card-border: #39495f;
+  --portal-tag-bg: #2a394d;
+  --portal-tag-text: #e5edf7;
+}
+
+/* Titre principal : Annonces spécifiques, Cours et programmes */
+.student-page h1,
+.student-page h2,
+.student-page h3,
+.student-page h4,
+.student-page .page-title,
+.student-page .section-title,
+.student-page .dashboard-card h1,
+.student-page .dashboard-card h2,
+.student-page .dashboard-card h3,
+.student-page .student-welcome h1,
+.student-page .student-welcome h2 {
+  color: var(--portal-title, #29384b) !important;
+  font-weight: 750 !important;
+  line-height: 1.4;
+}
+
+/* Petit titre : RESULTATS - INFORMATIONS CIBLEES, MA FORMATION */
+.student-page .portal-eyebrow,
+.student-page .section-eyebrow,
+.student-page .eyebrow,
+.student-page .section-label {
+  color: #b1843d !important;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+/* Paragraphes, explications et messages vides */
+.student-page p,
+.student-page li,
+.student-page .empty-state,
+.student-page .empty-message,
+.student-page .dashboard-card p,
+.student-page .dashboard-card .description {
+  color: var(--portal-text, #536174);
+  line-height: 1.7;
+}
+
+/* Cartes Mes notes, Annonces d'examens et programmes */
+.student-page .dashboard-card,
+.student-page .student-card,
+.student-page .program-card,
+.student-page .programme-card,
+.student-page .announcement-card,
+.student-page .annonce-card,
+.student-page .empty-state,
+.student-page .empty-message {
+  background-color: var(--portal-card-bg, #ffffff);
+  border-color: var(--portal-card-border, #e1e7ef);
+  border-radius: 15px;
+}
+
+/* Noms des formations et informations associées */
+.student-page .program-card h2,
+.student-page .program-card h3,
+.student-page .programme-card h2,
+.student-page .programme-card h3,
+.student-page .student-card h2,
+.student-page .student-card h3 {
+  color: var(--portal-title, #29384b) !important;
+}
+
+/* Codes INFO-L1 / INFO-L2 et badges de niveau */
+.student-page code,
+.student-page .badge,
+.student-page .tag,
+.student-page .program-code,
+.student-page .programme-code,
+.student-page .level-badge,
+.student-page .niveau-badge {
+  background: var(--portal-tag-bg, #edf2f7);
+  color: var(--portal-tag-text, #34465c);
+  border-color: var(--portal-card-border, #e1e7ef);
+  border-radius: 7px;
+}
+
+/* Lisibilité des éléments secondaires dans les fiches de programme */
+.student-page .program-card span,
+.student-page .programme-card span,
+.student-page .program-card strong,
+.student-page .programme-card strong {
+  color: var(--portal-text, #536174);
+}
+
+/* Animation discrète au survol des cartes */
+.student-page .program-card,
+.student-page .programme-card,
+.student-page .announcement-card,
+.student-page .annonce-card {
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.student-page .program-card:hover,
+.student-page .programme-card:hover,
+.student-page .announcement-card:hover,
+.student-page .annonce-card:hover {
+  border-color: #c5a16a;
+  box-shadow: 0 7px 22px rgba(35, 50, 70, .08);
+}
+
+/* Fin amélioration visuelle du portail étudiant */

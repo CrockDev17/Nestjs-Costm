@@ -1,0 +1,168 @@
+/*
+ * COSTM - Contraste du portail étudiant
+ * Corrige les titres bleu foncé invisibles en mode sombre.
+ */
+
+/* Détection du thème sombre, quel que soit l'endroit où la classe est posée */
+:where(
+  html[class*="dark"],
+  body[class*="dark"],
+  html[data-theme="dark"],
+  body[data-theme="dark"],
+  html[data-mode="dark"],
+  body[data-mode="dark"]
+) .student-page {
+  --portal-heading-visible: #f1f5f9;
+  --portal-text-visible: #d5deea;
+  --portal-muted-visible: #b9c5d5;
+  --portal-card-visible: #202c3d;
+  --portal-border-visible: #40516a;
+}
+
+/* Titres de toutes les pages étudiantes */
+:where(
+  html[class*="dark"],
+  body[class*="dark"],
+  html[data-theme="dark"],
+  body[data-theme="dark"],
+  html[data-mode="dark"],
+  body[data-mode="dark"]
+) .student-page h1,
+:where(
+  html[class*="dark"],
+  body[class*="dark"],
+  html[data-theme="dark"],
+  body[data-theme="dark"],
+  html[data-mode="dark"],
+  body[data-mode="dark"]
+) .student-page h2,
+:where(
+  html[class*="dark"],
+  body[class*="dark"],
+  html[data-theme="dark"],
+  body[data-theme="dark"],
+  html[data-mode="dark"],
+  body[data-mode="dark"]
+) .student-page h3,
+:where(
+  html[class*="dark"],
+  body[class*="dark"],
+  html[data-theme="dark"],
+  body[data-theme="dark"],
+  html[data-mode="dark"],
+  body[data-mode="dark"]
+) .student-page h4 {
+  color: var(--portal-heading-visible, #f1f5f9) !important;
+}
+
+/* Textes et libellés du portail : descriptions, notes, présence, profil */
+:where(
+  html[class*="dark"],
+  body[class*="dark"],
+  html[data-theme="dark"],
+  body[data-theme="dark"],
+  html[data-mode="dark"],
+  body[data-mode="dark"]
+) .student-page p,
+:where(
+  html[class*="dark"],
+  body[class*="dark"],
+  html[data-theme="dark"],
+  body[data-theme="dark"],
+  html[data-mode="dark"],
+  body[data-mode="dark"]
+) .student-page label,
+:where(
+  html[class*="dark"],
+  body[class*="dark"],
+  html[data-theme="dark"],
+  body[data-theme="dark"],
+  html[data-mode="dark"],
+  body[data-mode="dark"]
+) .student-page li,
+:where(
+  html[class*="dark"],
+  body[class*="dark"],
+  html[data-theme="dark"],
+  body[data-theme="dark"],
+  html[data-mode="dark"],
+  body[data-mode="dark"]
+) .student-page .dashboard-card span,
+:where(
+  html[class*="dark"],
+  body[class*="dark"],
+  html[data-theme="dark"],
+  body[data-theme="dark"],
+  html[data-mode="dark"],
+  body[data-mode="dark"]
+) .student-page .dashboard-card strong {
+  color: var(--portal-text-visible, #d5deea);
+}
+
+/* Les cartes ne doivent pas rester blanches avec des textes clairs */
+:where(
+  html[class*="dark"],
+  body[class*="dark"],
+  html[data-theme="dark"],
+  body[data-theme="dark"],
+  html[data-mode="dark"],
+  body[data-mode="dark"]
+) .student-page .dashboard-card,
+:where(
+  html[class*="dark"],
+  body[class*="dark"],
+  html[data-theme="dark"],
+  body[data-theme="dark"],
+  html[data-mode="dark"],
+  body[data-mode="dark"]
+) .student-page .program-card,
+:where(
+  html[class*="dark"],
+  body[class*="dark"],
+  html[data-theme="dark"],
+  body[data-theme="dark"],
+  html[data-mode="dark"],
+  body[data-mode="dark"]
+) .student-page .programme-card,
+:where(
+  html[class*="dark"],
+  body[class*="dark"],
+  html[data-theme="dark"],
+  body[data-theme="dark"],
+  html[data-mode="dark"],
+  body[data-mode="dark"]
+) .student-page .announcement-card {
+  background-color: var(--portal-card-visible, #202c3d);
+  border-color: var(--portal-border-visible, #40516a);
+}
+
+/* Le petit surtitre doré reste distinct et lisible */
+:where(
+  html[class*="dark"],
+  body[class*="dark"],
+  html[data-theme="dark"],
+  body[data-theme="dark"],
+  html[data-mode="dark"],
+  body[data-mode="dark"]
+) .student-page .portal-eyebrow {
+  color: #e7c786 !important;
+}
+
+/* Scanner QR : icônes et éléments textuels */
+:where(
+  html[class*="dark"],
+  body[class*="dark"],
+  html[data-theme="dark"],
+  body[data-theme="dark"],
+  html[data-mode="dark"],
+  body[data-mode="dark"]
+) .student-page svg {
+  color: #dbeafe;
+}
+
+/* En mode clair, garder une palette douce et lisible */
+html:not([class*="dark"]):not([data-theme="dark"]) .student-page h1,
+html:not([class*="dark"]):not([data-theme="dark"]) .student-page h2,
+html:not([class*="dark"]):not([data-theme="dark"]) .student-page h3 {
+  color: #334155;
+}
