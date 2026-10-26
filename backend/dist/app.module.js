@@ -19,6 +19,7 @@ const paiement_module_js_1 = require("./modules/paiement/paiement.module.js");
 const diplome_module_js_1 = require("./modules/diplome/diplome.module.js");
 const user_module_js_1 = require("./modules/user/user.module.js");
 const auth_module_js_1 = require("./modules/auth/auth.module.js");
+const annonce_module_js_1 = require("./modules/annonce/annonce.module.js");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -37,6 +38,7 @@ exports.AppModule = AppModule = __decorate([
             diplome_module_js_1.DiplomeModule,
             user_module_js_1.UserModule,
             auth_module_js_1.AuthModule,
+            annonce_module_js_1.AnnonceModule,
         ],
     })
 ], AppModule);

@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Presence = exports.StatutPresence = void 0;
 const typeorm_1 = require("typeorm");
 const etudiant_entity_js_1 = require("../etudiant/domain/etudiant.entity.js");
+const presence_session_entity_js_1 = require("./presence-session.entity.js");
 var StatutPresence;
 (function (StatutPresence) {
     StatutPresence["PRESENT"] = "PRESENT";
@@ -25,6 +26,7 @@ let Presence = class Presence {
     date;
     justification;
     etudiant;
+    session;
 };
 exports.Presence = Presence;
 __decorate([
@@ -44,14 +46,19 @@ __decorate([
     __metadata("design:type", String)
 ], Presence.prototype, "date", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
+    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
+    __metadata("design:type", Object)
 ], Presence.prototype, "justification", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => etudiant_entity_js_1.Etudiant, (etudiant) => etudiant.presences, { onDelete: 'CASCADE' }),
     __metadata("design:type", etudiant_entity_js_1.Etudiant)
 ], Presence.prototype, "etudiant", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => presence_session_entity_js_1.PresenceSession, (session) => session.presences, { nullable: true, onDelete: 'SET NULL' }),
+    __metadata("design:type", Object)
+], Presence.prototype, "session", void 0);
 exports.Presence = Presence = __decorate([
-    (0, typeorm_1.Entity)('presences')
+    (0, typeorm_1.Entity)('presences'),
+    (0, typeorm_1.Index)(['session', 'etudiant'], { unique: true })
 ], Presence);
 //# sourceMappingURL=presence.entity.js.map

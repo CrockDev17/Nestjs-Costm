@@ -25,11 +25,9 @@ export class UserService {
   async create(
     createUserDto: CreateUserDto,
   ): Promise<Omit<User, 'password'>> {
-    const {
-      email,
-      password,
-      etudiantId,
-    } = createUserDto;
+    const email = createUserDto.email.trim().toLowerCase();
+    const password = createUserDto.password;
+    const etudiantId = createUserDto.etudiantId;
 
     const existingUser = await this.userRepository.findOne({
       where: { email },
@@ -37,27 +35,36 @@ export class UserService {
 
     if (existingUser) {
       throw new ConflictException(
-        'Un utilisateur avec cet email existe déjà',
+        'Un utilisateur avec cet email existe deja',
       );
-    }
-
-    let etudiant: Etudiant | null = null;
-
-    if (etudiantId) {
-      etudiant = await this.etudiantRepository.findOne({
-        where: { id: etudiantId },
-      });
-
-      if (!etudiant) {
-        throw new NotFoundException(
-          'Étudiant introuvable',
-        );
-      }
     }
 
     if (!etudiantId) {
       throw new BadRequestException(
-        'Un compte étudiant doit être associé à un étudiant',
+        'Un compte etudiant doit etre associe a un dossier etudiant',
+      );
+    }
+
+    const etudiant = await this.etudiantRepository.findOne({
+      where: { id: etudiantId },
+    });
+
+    if (!etudiant) {
+      throw new NotFoundException('Etudiant introuvable');
+    }
+
+    const compteExistant = await this.userRepository.findOne({
+      where: {
+        etudiant: { id: etudiantId },
+      },
+      relations: {
+        etudiant: true,
+      },
+    });
+
+    if (compteExistant) {
+      throw new ConflictException(
+        'Cet etudiant possede deja un compte de connexion',
       );
     }
 
@@ -71,13 +78,12 @@ export class UserService {
     });
 
     const savedUser = await this.userRepository.save(user);
-
     return this.removePassword(savedUser);
   }
 
   async findByEmail(email: string): Promise<User | null> {
     return await this.userRepository.findOne({
-      where: { email },
+      where: { email: email.trim().toLowerCase() },
       relations: {
         etudiant: true,
       },
@@ -100,39 +106,27 @@ export class UserService {
       },
     });
 
-    return users.map((user) =>
-      this.removePassword(user),
-    );
+    return users.map((user) => this.removePassword(user));
   }
 
   async findMe(id: string): Promise<Omit<User, 'password'>> {
     const user = await this.findById(id);
 
     if (!user) {
-      throw new NotFoundException(
-        'Utilisateur introuvable',
-      );
+      throw new NotFoundException('Utilisateur introuvable');
     }
 
     return this.removePassword(user);
   }
 
-  private async hashPassword(
-    password: string,
-  ): Promise<string> {
+  private async hashPassword(password: string): Promise<string> {
     return await import('bcryptjs').then((bcrypt) =>
       bcrypt.hash(password, 12),
     );
   }
 
-  removePassword(
-    user: User,
-  ): Omit<User, 'password'> {
-    const {
-      password,
-      ...safeUser
-    } = user;
-
+  removePassword(user: User): Omit<User, 'password'> {
+    const { password, ...safeUser } = user;
     return safeUser;
   }
 }

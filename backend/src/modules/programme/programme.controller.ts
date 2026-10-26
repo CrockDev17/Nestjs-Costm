@@ -37,7 +37,7 @@ export class ProgrammeController {
   // LISTE
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ETUDIANT)
   findAll() {
     return this.programmeService.findAll();
   }

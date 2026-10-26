@@ -1,12 +1,14 @@
 import {
+  Body,
   Controller,
   Get,
+  Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
 
 import { UserService } from './user.service.js';
-
+import { CreateUserDto } from './dto/create-user.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
@@ -29,5 +31,13 @@ export class UserController {
   @Roles(UserRole.ADMIN)
   findAll() {
     return this.userService.findAll();
+  }
+
+  // Cree un compte ETUDIANT lie a un dossier existant.
+  @Post('student-account')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  createStudentAccount(@Body() dto: CreateUserDto) {
+    return this.userService.create(dto);
   }
 }

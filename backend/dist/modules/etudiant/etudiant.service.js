@@ -16,7 +16,7 @@ exports.EtudiantService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const etudiant_entity_1 = require("./domain/etudiant.entity");
+const etudiant_entity_js_1 = require("./domain/etudiant.entity.js");
 const user_entity_js_1 = require("../user/domain/user.entity.js");
 let EtudiantService = class EtudiantService {
     etudiantRepository;
@@ -27,12 +27,16 @@ let EtudiantService = class EtudiantService {
     }
     async create(createEtudiantDto) {
         const etudiant = this.etudiantRepository.create(createEtudiantDto);
-        return await this.etudiantRepository.save(etudiant);
+        return this.etudiantRepository.save(etudiant);
     }
     async findAll() {
-        return await this.etudiantRepository.find({
+        return this.etudiantRepository.find({
             relations: {
+                programme: true,
                 presences: true,
+                notes: true,
+                paiements: true,
+                diplomes: true,
             },
         });
     }
@@ -40,7 +44,11 @@ let EtudiantService = class EtudiantService {
         const etudiant = await this.etudiantRepository.findOne({
             where: { id },
             relations: {
+                programme: true,
                 presences: true,
+                notes: true,
+                paiements: true,
+                diplomes: true,
             },
         });
         if (!etudiant) {
@@ -63,11 +71,35 @@ let EtudiantService = class EtudiantService {
         }
         return user.etudiant;
     }
+    async update(id, updateEtudiantDto) {
+        const etudiant = await this.etudiantRepository.findOne({
+            where: { id },
+        });
+        if (!etudiant) {
+            throw new common_1.NotFoundException(`Étudiant avec l'ID ${id} non trouvé`);
+        }
+        Object.assign(etudiant, updateEtudiantDto);
+        return this.etudiantRepository.save(etudiant);
+    }
+    async remove(id) {
+        const etudiant = await this.findOne(id);
+        const hasLinkedRecords = etudiant.presences.length > 0 ||
+            etudiant.notes.length > 0 ||
+            etudiant.paiements.length > 0 ||
+            etudiant.diplomes.length > 0;
+        if (hasLinkedRecords) {
+            throw new common_1.ConflictException('Suppression impossible : cet étudiant possède des notes, présences, paiements ou diplômes. Conservez son historique.');
+        }
+        await this.etudiantRepository.remove(etudiant);
+        return {
+            message: 'Étudiant supprimé avec succès',
+        };
+    }
 };
 exports.EtudiantService = EtudiantService;
 exports.EtudiantService = EtudiantService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(etudiant_entity_1.Etudiant)),
+    __param(0, (0, typeorm_1.InjectRepository)(etudiant_entity_js_1.Etudiant)),
     __param(1, (0, typeorm_1.InjectRepository)(user_entity_js_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository])

@@ -1,7 +1,9 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Body,
   Param,
   UseGuards,
@@ -10,6 +12,7 @@ import {
 
 import { EtudiantService } from './etudiant.service.js';
 import { CreateEtudiantDto } from './dto/create-etudiant.dto.js';
+import { UpdateEtudiantDto } from './dto/update-etudiant.dto.js';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
@@ -22,40 +25,18 @@ export class EtudiantController {
     private readonly etudiantService: EtudiantService,
   ) {}
 
-  // ==========================================
-  // CRÉER UN ÉTUDIANT
-  // ADMIN UNIQUEMENT
-  // ==========================================
-
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  create(
-    @Body()
-    createEtudiantDto: CreateEtudiantDto,
-  ) {
-    return this.etudiantService.create(
-      createEtudiantDto,
-    );
+  create(@Body() createEtudiantDto: CreateEtudiantDto) {
+    return this.etudiantService.create(createEtudiantDto);
   }
-
-  // ==========================================
-  // RÉCUPÉRER SON PROPRE PROFIL
-  // ÉTUDIANT CONNECTÉ
-  // ==========================================
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
   findMe(@Req() req: any) {
-    return this.etudiantService.findMe(
-      req.user.sub,
-    );
+    return this.etudiantService.findMe(req.user.sub);
   }
-
-  // ==========================================
-  // RÉCUPÉRER TOUS LES ÉTUDIANTS
-  // ADMIN UNIQUEMENT
-  // ==========================================
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -64,17 +45,27 @@ export class EtudiantController {
     return this.etudiantService.findAll();
   }
 
-  // ==========================================
-  // RÉCUPÉRER UN ÉTUDIANT PAR ID
-  // ADMIN UNIQUEMENT
-  // ==========================================
-
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  findOne(
-    @Param('id') id: string,
-  ) {
+  findOne(@Param('id') id: string) {
     return this.etudiantService.findOne(id);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  update(
+    @Param('id') id: string,
+    @Body() updateEtudiantDto: UpdateEtudiantDto,
+  ) {
+    return this.etudiantService.update(id, updateEtudiantDto);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  remove(@Param('id') id: string) {
+    return this.etudiantService.remove(id);
   }
 }

@@ -1,0 +1,16 @@
+backend/node_modules/
+backend/dist/
+backend/.envnode_modules/
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+frontend/dist/
+frontend/backups/
+frontend/backup-*/
+frontend/*.backup-*
+frontend/*.bak*
+backend/backups/
+backend/backup-*/
+backend/*.backup-*
+backend/*.bak*
+*.tsbuildinfo

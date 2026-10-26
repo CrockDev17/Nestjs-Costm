@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+﻿import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 
@@ -13,6 +13,7 @@ import { DiplomeModule } from './modules/diplome/diplome.module.js';
 
 import { UserModule } from './modules/user/user.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { AnnonceModule } from './modules/annonce/annonce.module.js';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { AuthModule } from './modules/auth/auth.module.js';
 
     UserModule,
     AuthModule,
+    AnnonceModule,
   ],
 })
 export class AppModule { }

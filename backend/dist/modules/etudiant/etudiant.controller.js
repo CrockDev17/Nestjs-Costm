@@ -16,6 +16,7 @@ exports.EtudiantController = void 0;
 const common_1 = require("@nestjs/common");
 const etudiant_service_js_1 = require("./etudiant.service.js");
 const create_etudiant_dto_js_1 = require("./dto/create-etudiant.dto.js");
+const update_etudiant_dto_js_1 = require("./dto/update-etudiant.dto.js");
 const jwt_auth_guard_js_1 = require("../auth/guards/jwt-auth.guard.js");
 const roles_guard_js_1 = require("../auth/guards/roles.guard.js");
 const roles_decorator_js_1 = require("../auth/decorators/roles.decorator.js");
@@ -36,6 +37,12 @@ let EtudiantController = class EtudiantController {
     }
     findOne(id) {
         return this.etudiantService.findOne(id);
+    }
+    update(id, updateEtudiantDto) {
+        return this.etudiantService.update(id, updateEtudiantDto);
+    }
+    remove(id) {
+        return this.etudiantService.remove(id);
     }
 };
 exports.EtudiantController = EtudiantController;
@@ -73,6 +80,25 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], EtudiantController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.Patch)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_js_1.JwtAuthGuard, roles_guard_js_1.RolesGuard),
+    (0, roles_decorator_js_1.Roles)(user_entity_js_1.UserRole.ADMIN),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, update_etudiant_dto_js_1.UpdateEtudiantDto]),
+    __metadata("design:returntype", void 0)
+], EtudiantController.prototype, "update", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_js_1.JwtAuthGuard, roles_guard_js_1.RolesGuard),
+    (0, roles_decorator_js_1.Roles)(user_entity_js_1.UserRole.ADMIN),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], EtudiantController.prototype, "remove", null);
 exports.EtudiantController = EtudiantController = __decorate([
     (0, common_1.Controller)('etudiants'),
     __metadata("design:paramtypes", [etudiant_service_js_1.EtudiantService])

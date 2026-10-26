@@ -16,6 +16,8 @@ exports.PresenceController = void 0;
 const common_1 = require("@nestjs/common");
 const presence_service_js_1 = require("./presence.service.js");
 const create_presence_dto_js_1 = require("./dto/create-presence.dto.js");
+const update_presence_dto_js_1 = require("./dto/update-presence.dto.js");
+const create_presence_session_dto_js_1 = require("./dto/create-presence-session.dto.js");
 const jwt_auth_guard_js_1 = require("../auth/guards/jwt-auth.guard.js");
 const roles_guard_js_1 = require("../auth/guards/roles.guard.js");
 const roles_decorator_js_1 = require("../auth/decorators/roles.decorator.js");
@@ -25,17 +27,38 @@ let PresenceController = class PresenceController {
     constructor(presenceService) {
         this.presenceService = presenceService;
     }
-    create(createPresenceDto) {
-        return this.presenceService.create(createPresenceDto);
+    create(dto) {
+        return this.presenceService.create(dto);
     }
     findMyPresences(req) {
         return this.presenceService.findMyPresences(req.user.sub);
+    }
+    createSession(dto, req) {
+        return this.presenceService.createSession(dto, req.user.sub);
+    }
+    listSessions() {
+        return this.presenceService.listSessions();
+    }
+    getSession(id) {
+        return this.presenceService.getSession(id);
+    }
+    closeSession(id) {
+        return this.presenceService.closeSession(id);
+    }
+    scanSession(token, req) {
+        return this.presenceService.scanSession(token, req.user.sub);
     }
     findAll() {
         return this.presenceService.findAll();
     }
     findOne(id) {
         return this.presenceService.findOne(id);
+    }
+    update(id, dto) {
+        return this.presenceService.update(id, dto);
+    }
+    remove(id) {
+        return this.presenceService.remove(id);
     }
 };
 exports.PresenceController = PresenceController;
@@ -57,6 +80,51 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], PresenceController.prototype, "findMyPresences", null);
 __decorate([
+    (0, common_1.Post)('sessions'),
+    (0, common_1.UseGuards)(jwt_auth_guard_js_1.JwtAuthGuard, roles_guard_js_1.RolesGuard),
+    (0, roles_decorator_js_1.Roles)(user_entity_js_1.UserRole.ADMIN),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [create_presence_session_dto_js_1.CreatePresenceSessionDto, Object]),
+    __metadata("design:returntype", void 0)
+], PresenceController.prototype, "createSession", null);
+__decorate([
+    (0, common_1.Get)('sessions'),
+    (0, common_1.UseGuards)(jwt_auth_guard_js_1.JwtAuthGuard, roles_guard_js_1.RolesGuard),
+    (0, roles_decorator_js_1.Roles)(user_entity_js_1.UserRole.ADMIN),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], PresenceController.prototype, "listSessions", null);
+__decorate([
+    (0, common_1.Get)('sessions/:id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_js_1.JwtAuthGuard, roles_guard_js_1.RolesGuard),
+    (0, roles_decorator_js_1.Roles)(user_entity_js_1.UserRole.ADMIN),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], PresenceController.prototype, "getSession", null);
+__decorate([
+    (0, common_1.Patch)('sessions/:id/close'),
+    (0, common_1.UseGuards)(jwt_auth_guard_js_1.JwtAuthGuard, roles_guard_js_1.RolesGuard),
+    (0, roles_decorator_js_1.Roles)(user_entity_js_1.UserRole.ADMIN),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], PresenceController.prototype, "closeSession", null);
+__decorate([
+    (0, common_1.Post)('sessions/:token/scan'),
+    (0, common_1.UseGuards)(jwt_auth_guard_js_1.JwtAuthGuard),
+    __param(0, (0, common_1.Param)('token')),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], PresenceController.prototype, "scanSession", null);
+__decorate([
     (0, common_1.Get)(),
     (0, common_1.UseGuards)(jwt_auth_guard_js_1.JwtAuthGuard, roles_guard_js_1.RolesGuard),
     (0, roles_decorator_js_1.Roles)(user_entity_js_1.UserRole.ADMIN),
@@ -73,6 +141,25 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], PresenceController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.Patch)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_js_1.JwtAuthGuard, roles_guard_js_1.RolesGuard),
+    (0, roles_decorator_js_1.Roles)(user_entity_js_1.UserRole.ADMIN),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, update_presence_dto_js_1.UpdatePresenceDto]),
+    __metadata("design:returntype", void 0)
+], PresenceController.prototype, "update", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_js_1.JwtAuthGuard, roles_guard_js_1.RolesGuard),
+    (0, roles_decorator_js_1.Roles)(user_entity_js_1.UserRole.ADMIN),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], PresenceController.prototype, "remove", null);
 exports.PresenceController = PresenceController = __decorate([
     (0, common_1.Controller)('presences'),
     __metadata("design:paramtypes", [presence_service_js_1.PresenceService])

@@ -1,7 +1,9 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Body,
   Param,
   UseGuards,
@@ -10,6 +12,7 @@ import {
 
 import { NoteService } from './note.service.js';
 import { CreateNoteDto } from './dto/create-note.dto.js';
+import { UpdateNoteDto } from './dto/update-note.dto.js';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
@@ -22,40 +25,18 @@ export class NoteController {
     private readonly noteService: NoteService,
   ) {}
 
-  // ==========================================
-  // CRÉER UNE NOTE
-  // ADMIN UNIQUEMENT
-  // ==========================================
-
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  create(
-    @Body()
-    createNoteDto: CreateNoteDto,
-  ) {
-    return this.noteService.create(
-      createNoteDto,
-    );
+  create(@Body() dto: CreateNoteDto) {
+    return this.noteService.create(dto);
   }
-
-  // ==========================================
-  // NOTES DE L'ÉTUDIANT CONNECTÉ
-  // JWT UNIQUEMENT
-  // ==========================================
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
   findMyNotes(@Req() req: any) {
-    return this.noteService.findMyNotes(
-      req.user.sub,
-    );
+    return this.noteService.findMyNotes(req.user.sub);
   }
-
-  // ==========================================
-  // TOUTES LES NOTES
-  // ADMIN UNIQUEMENT
-  // ==========================================
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -64,17 +45,27 @@ export class NoteController {
     return this.noteService.findAll();
   }
 
-  // ==========================================
-  // UNE NOTE PAR ID
-  // ADMIN UNIQUEMENT
-  // ==========================================
-
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  findOne(
-    @Param('id') id: string,
-  ) {
+  findOne(@Param('id') id: string) {
     return this.noteService.findOne(id);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateNoteDto,
+  ) {
+    return this.noteService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  remove(@Param('id') id: string) {
+    return this.noteService.remove(id);
   }
 }

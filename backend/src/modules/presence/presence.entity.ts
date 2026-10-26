@@ -1,11 +1,13 @@
-import {
+﻿import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  Index,
 } from 'typeorm';
 
 import { Etudiant } from '../etudiant/domain/etudiant.entity.js';
+import { PresenceSession } from './presence-session.entity.js';
 
 export enum StatutPresence {
   PRESENT = 'PRESENT',
@@ -15,6 +17,7 @@ export enum StatutPresence {
 }
 
 @Entity('presences')
+@Index(['session', 'etudiant'], { unique: true })
 export class Presence {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -29,8 +32,8 @@ export class Presence {
   @Column({ type: 'date' })
   date: string;
 
-  @Column({ nullable: true })
-  justification: string;
+  @Column({ type: 'text', nullable: true })
+  justification: string | null;
 
   @ManyToOne(
     () => Etudiant,
@@ -38,4 +41,12 @@ export class Presence {
     { onDelete: 'CASCADE' },
   )
   etudiant: Etudiant;
+
+  @ManyToOne(
+    () => PresenceSession,
+    (session) => session.presences,
+    { nullable: true, onDelete: 'SET NULL' },
+  )
+  session: PresenceSession | null;
 }
+

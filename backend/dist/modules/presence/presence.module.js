@@ -10,6 +10,7 @@ exports.PresenceModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const presence_entity_js_1 = require("./presence.entity.js");
+const presence_session_entity_js_1 = require("./presence-session.entity.js");
 const presence_service_js_1 = require("./presence.service.js");
 const presence_controller_js_1 = require("./presence.controller.js");
 const etudiant_entity_js_1 = require("../etudiant/domain/etudiant.entity.js");
@@ -22,16 +23,13 @@ exports.PresenceModule = PresenceModule = __decorate([
         imports: [
             typeorm_1.TypeOrmModule.forFeature([
                 presence_entity_js_1.Presence,
+                presence_session_entity_js_1.PresenceSession,
                 etudiant_entity_js_1.Etudiant,
                 user_entity_js_1.User,
             ]),
         ],
-        controllers: [
-            presence_controller_js_1.PresenceController,
-        ],
-        providers: [
-            presence_service_js_1.PresenceService,
-        ],
+        controllers: [presence_controller_js_1.PresenceController],
+        providers: [presence_service_js_1.PresenceService],
     })
 ], PresenceModule);
 //# sourceMappingURL=presence.module.js.map
