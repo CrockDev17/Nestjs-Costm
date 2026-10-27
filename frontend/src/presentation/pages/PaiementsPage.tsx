@@ -5,8 +5,15 @@ import {
   listPaiementsUseCase,
   etudiantRepository,
 } from '../di/containers';
+import { HttpPaiementRepository } from '../../infrastructure/repositories/HttpPaiementRepository';
 import type { Paiement, PaiementStatut } from '../../domain/entities/Paiement';
 import type { Etudiant } from '../../domain/entities/Etudiant';
+import type {
+  CreatePaiementData,
+  UpdatePaiementData,
+} from '../../domain/repositories/PaiementRepository';
+
+const paiementRepository = new HttpPaiementRepository();
 
 const statutLabels: Record<PaiementStatut, string> = {
   PAYE: 'Payé',
@@ -33,6 +40,15 @@ function today(): string {
   return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 10);
 }
 
+const emptyForm = () => ({
+  montant: '',
+  date: today(),
+  motif: '',
+  statut: 'IMPAYE' as PaiementStatut,
+  reference: '',
+  etudiantId: '',
+});
+
 export default function PaiementsPage() {
   const [paiements, setPaiements] = useState<Paiement[]>([]);
   const [etudiants, setEtudiants] = useState<Etudiant[]>([]);
@@ -40,17 +56,11 @@ export default function PaiementsPage() {
   const [filtreStatut, setFiltreStatut] = useState('TOUS');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState('');
+  const [editingId, setEditingId] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
-  const [form, setForm] = useState({
-    montant: '',
-    date: today(),
-    motif: '',
-    statut: 'IMPAYE' as PaiementStatut,
-    reference: '',
-    etudiantId: '',
-  });
+  const [form, setForm] = useState(emptyForm);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -80,7 +90,8 @@ export default function PaiementsPage() {
 
     return paiements.filter((paiement) => {
       const student = paiement.etudiant;
-      const studentName = `${student?.nom ?? ''} ${student?.prenom ?? ''}`.toLowerCase();
+      const studentName =
+        `${student?.nom ?? ''} ${student?.prenom ?? ''}`.toLowerCase();
 
       const matchesSearch =
         !query ||
@@ -111,37 +122,95 @@ export default function PaiementsPage() {
     setForm((current) => ({ ...current, [name]: value }));
   }
 
+  function startEditing(paiement: Paiement) {
+    setEditingId(paiement.id);
+    setError('');
+    setSuccess('');
+    setForm({
+      montant: String(paiement.montant ?? ''),
+      date: paiement.date?.slice(0, 10) || today(),
+      motif: paiement.motif ?? '',
+      statut: paiement.statut,
+      reference: paiement.reference ?? '',
+      etudiantId: paiement.etudiant?.id ?? paiement.etudiantId ?? '',
+    });
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function cancelEditing() {
+    setEditingId('');
+    setForm(emptyForm());
+    setError('');
+    setSuccess('');
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError('');
     setSuccess('');
+
+    if (!Number.isFinite(Number(form.montant)) || Number(form.montant) < 0) {
+      setError('Le montant doit être un nombre positif ou nul.');
+      return;
+    }
+
     setSaving(true);
 
     try {
-      await createPaiementUseCase.execute({
+      const payload: CreatePaiementData = {
         montant: Number(form.montant),
         date: form.date,
-        motif: form.motif,
+        motif: form.motif.trim(),
         statut: form.statut,
-        reference: form.reference,
+        reference: form.reference.trim(),
         etudiantId: form.etudiantId,
-      });
+      };
 
-      setSuccess('Paiement enregistré.');
-      setForm({
-        montant: '',
-        date: today(),
-        motif: '',
-        statut: 'IMPAYE',
-        reference: '',
-        etudiantId: '',
-      });
+      if (editingId) {
+        const updatePayload: UpdatePaiementData = payload;
+        await paiementRepository.update(editingId, updatePayload);
+        setSuccess('Paiement modifié avec succès.');
+      } else {
+        await createPaiementUseCase.execute(payload);
+        setSuccess('Paiement enregistré avec succès.');
+      }
 
+      setEditingId('');
+      setForm(emptyForm());
       await loadData();
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDelete(paiement: Paiement) {
+    const confirmed = window.confirm(
+      `Confirmer la suppression du paiement "${paiement.reference}" ? Cette action est définitive.`,
+    );
+
+    if (!confirmed) return;
+
+    setError('');
+    setSuccess('');
+    setDeletingId(paiement.id);
+
+    try {
+      await paiementRepository.delete(paiement.id);
+
+      if (editingId === paiement.id) {
+        setEditingId('');
+        setForm(emptyForm());
+      }
+
+      setSuccess(`Le paiement ${paiement.reference} a été supprimé.`);
+      await loadData();
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setDeletingId('');
     }
   }
 
@@ -152,6 +221,9 @@ export default function PaiementsPage() {
           <h1>Gestion des paiements</h1>
           <p>Enregistrer et suivre les paiements des étudiants.</p>
         </div>
+        <button type="button" className="secondary-button" onClick={() => void loadData()} disabled={loading}>
+          {loading ? 'Actualisation...' : 'Actualiser'}
+        </button>
       </header>
 
       <div className="stats-grid">
@@ -171,7 +243,7 @@ export default function PaiementsPage() {
 
       <div className="content-grid">
         <section className="panel">
-          <h2>Enregistrer un paiement</h2>
+          <h2>{editingId ? 'Modifier le paiement' : 'Enregistrer un paiement'}</h2>
 
           <form onSubmit={handleSubmit} className="form-grid">
             <label>
@@ -251,9 +323,21 @@ export default function PaiementsPage() {
               </select>
             </label>
 
-            <button type="submit" disabled={saving}>
-              {saving ? 'Enregistrement...' : 'Enregistrer le paiement'}
-            </button>
+            <div className="form-actions">
+              <button type="submit" disabled={saving}>
+                {saving
+                  ? 'Enregistrement...'
+                  : editingId
+                    ? 'Enregistrer les modifications'
+                    : 'Enregistrer le paiement'}
+              </button>
+
+              {editingId && (
+                <button type="button" onClick={cancelEditing} disabled={saving}>
+                  Annuler
+                </button>
+              )}
+            </div>
           </form>
         </section>
 
@@ -280,6 +364,7 @@ export default function PaiementsPage() {
 
           {error && <p role="alert" className="error-message">{error}</p>}
           {success && <p className="success-message">{success}</p>}
+
           {loading ? (
             <p>Chargement des paiements...</p>
           ) : (
@@ -293,6 +378,7 @@ export default function PaiementsPage() {
                     <th>Montant</th>
                     <th>Date</th>
                     <th>Statut</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -308,11 +394,31 @@ export default function PaiementsPage() {
                       <td>{Number(paiement.montant).toLocaleString('fr-FR')} Ar</td>
                       <td>{paiement.date?.slice(0, 10)}</td>
                       <td>{statutLabels[paiement.statut]}</td>
+                      <td>
+                        <div className="payment-actions" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => startEditing(paiement)}
+                            disabled={saving || deletingId !== ''}
+                          >
+                            Modifier
+                          </button>
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => void handleDelete(paiement)}
+                            disabled={saving || deletingId !== ''}
+                          >
+                            {deletingId === paiement.id ? 'Suppression...' : 'Supprimer'}
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                   {filteredPaiements.length === 0 && (
                     <tr>
-                      <td colSpan={6}>Aucun paiement trouvé.</td>
+                      <td colSpan={7}>Aucun paiement trouvé.</td>
                     </tr>
                   )}
                 </tbody>

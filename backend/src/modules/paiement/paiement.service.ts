@@ -1,4 +1,4 @@
-import {
+﻿import {
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
@@ -35,7 +35,7 @@ export class PaiementService {
 
         if (!etudiant) {
             throw new NotFoundException(
-                'Étudiant introuvable pour ce paiement',
+                'Ã‰tudiant introuvable pour ce paiement',
             );
         }
 
@@ -65,7 +65,7 @@ export class PaiementService {
 
         if (!paiement) {
             throw new NotFoundException(
-                `Paiement avec l'ID ${id} non trouvé`,
+                `Paiement avec l'ID ${id} non trouvÃ©`,
             );
         }
 
@@ -89,7 +89,7 @@ export class PaiementService {
 
         if (!user.etudiant) {
             throw new NotFoundException(
-                'Aucun étudiant associé à cet utilisateur',
+                'Aucun Ã©tudiant associÃ© Ã  cet utilisateur',
             );
         }
 
@@ -100,5 +100,46 @@ export class PaiementService {
                 },
             },
         });
+    }
+
+    async update(
+        id: string,
+        data: import('./dto/update-paiement.dto.js').UpdatePaiementDto,
+    ): Promise<Paiement> {
+        const paiement = await this.findOne(id);
+        const { etudiantId, ...paiementData } = data;
+
+        if (etudiantId) {
+            const etudiant = await this.etudiantRepository.findOne({
+                where: { id: etudiantId },
+            });
+
+            if (!etudiant) {
+                throw new NotFoundException(
+                    'Étudiant introuvable pour ce paiement',
+                );
+            }
+
+            paiement.etudiant = etudiant;
+        }
+
+        Object.assign(paiement, paiementData);
+        return this.paiementRepository.save(paiement);
+    }
+
+    async remove(id: string): Promise<{ message: string }> {
+        const paiement = await this.paiementRepository.findOne({
+            where: { id },
+        });
+
+        if (!paiement) {
+            throw new NotFoundException(
+                `Paiement avec l'ID ${id} non trouvé`,
+            );
+        }
+
+        await this.paiementRepository.remove(paiement);
+
+        return { message: 'Paiement supprimé avec succès.' };
     }
 }

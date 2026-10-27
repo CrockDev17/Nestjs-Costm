@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import type {
   Annonce,
@@ -265,7 +265,7 @@ export default function AnnoncesPage() {
             Publiez les informations importantes et gérez les communications de l’établissement.
           </p>
         </div>
-        <button type="button" onClick={() => { resetForm(); setError(''); setSuccess(''); }}
+        <button type="button" className="costm-nouvelle-annonce-btn" onClick={() => { resetForm(); setError(''); setSuccess(''); }}
           style={buttonStyle('#172554')} >
           + Nouvelle annonce
         </button>
@@ -374,7 +374,7 @@ export default function AnnoncesPage() {
 
           <div style={{ display: 'flex', gap: 10, marginTop: 18, flexWrap: 'wrap' }}>
             <button type="submit" disabled={saving} style={{
-              ...buttonStyle(saving ? '#94a3b8' : '#4f46e5'),
+              ...buttonStyle(saving ? '#94a3b8' : '#172554'),
               padding: '11px 18px', cursor: saving ? 'wait' : 'pointer',
             }}>
               {saving ? 'Enregistrement…' : editingId ? 'Enregistrer les modifications' : 'Créer l’annonce'}
@@ -468,7 +468,7 @@ export default function AnnoncesPage() {
                   </div>
 
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', paddingTop: 12, borderTop: '1px solid #eef2f7' }}>
-                    <button type="button" onClick={() => startEdit(annonce)} style={buttonStyle('#eef2ff', '#4338ca')}>
+                    <button type="button" onClick={() => startEdit(annonce)} className="secondary-button">
                       Modifier
                     </button>
                     {annonce.statut !== 'PUBLIEE' && (
@@ -479,18 +479,18 @@ export default function AnnoncesPage() {
                     )}
                     {annonce.statut !== 'BROUILLON' && (
                       <button type="button" onClick={() => void changeStatus(annonce, 'BROUILLON')}
-                        style={buttonStyle('#fef3c7', '#92400e')}>
+                        className="secondary-button">
                         Remettre en brouillon
                       </button>
                     )}
                     {annonce.statut !== 'ARCHIVEE' && (
                       <button type="button" onClick={() => void changeStatus(annonce, 'ARCHIVEE')}
-                        style={buttonStyle('#e2e8f0', '#334155')}>
+                        className="secondary-button">
                         Archiver
                       </button>
                     )}
                     <button type="button" onClick={() => void removeAnnonce(annonce)}
-                      style={buttonStyle('#fee2e2', '#b91c1c')}>
+                      className="secondary-button">
                       Supprimer
                     </button>
                   </div>

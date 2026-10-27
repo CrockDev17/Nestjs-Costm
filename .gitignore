@@ -12,3 +12,6 @@ frontend/dist/
 *.backup-*
 *.bak*
 *.tsbuildinfo
+# Sauvegardes locales temporaires
+frontend/backup*/
+backend/*.tsbuildinfo

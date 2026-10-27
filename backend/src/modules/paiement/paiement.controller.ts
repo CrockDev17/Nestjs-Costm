@@ -1,7 +1,9 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Body,
   Param,
   UseGuards,
@@ -10,6 +12,7 @@ import {
 
 import { PaiementService } from './paiement.service.js';
 import { CreatePaiementDto } from './dto/create-paiement.dto.js';
+import { UpdatePaiementDto } from './dto/update-paiement.dto.js';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
@@ -18,44 +21,20 @@ import { UserRole } from '../user/domain/user.entity.js';
 
 @Controller('paiements')
 export class PaiementController {
-  constructor(
-    private readonly paiementService: PaiementService,
-  ) {}
-
-  // ==========================================
-  // CRÉER UN PAIEMENT
-  // ADMIN UNIQUEMENT
-  // ==========================================
+  constructor(private readonly paiementService: PaiementService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  create(
-    @Body()
-    createPaiementDto: CreatePaiementDto,
-  ) {
-    return this.paiementService.create(
-      createPaiementDto,
-    );
+  create(@Body() dto: CreatePaiementDto) {
+    return this.paiementService.create(dto);
   }
-
-  // ==========================================
-  // PAIEMENTS DE L'ÉTUDIANT CONNECTÉ
-  // JWT UNIQUEMENT
-  // ==========================================
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
   findMyPaiements(@Req() req: any) {
-    return this.paiementService.findMyPaiements(
-      req.user.sub,
-    );
+    return this.paiementService.findMyPaiements(req.user.sub);
   }
-
-  // ==========================================
-  // TOUS LES PAIEMENTS
-  // ADMIN UNIQUEMENT
-  // ==========================================
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -64,17 +43,27 @@ export class PaiementController {
     return this.paiementService.findAll();
   }
 
-  // ==========================================
-  // UN PAIEMENT PAR ID
-  // ADMIN UNIQUEMENT
-  // ==========================================
-
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  findOne(
-    @Param('id') id: string,
-  ) {
+  findOne(@Param('id') id: string) {
     return this.paiementService.findOne(id);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdatePaiementDto,
+  ) {
+    return this.paiementService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  remove(@Param('id') id: string) {
+    return this.paiementService.remove(id);
   }
 }

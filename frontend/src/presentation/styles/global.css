@@ -194,12 +194,12 @@ button:disabled {
   box-shadow: 0 24px 70px #071a3512;
 }
 
-/* Espacement des boutons dans le formulaire étudiant */
+/* Espacement des boutons dans le formulaire Ã©tudiant */
 .student-form button {
   margin-right: 10px;
 }
 
-/* Espacement des boutons d'action dans le tableau des étudiants */
+/* Espacement des boutons d'action dans le tableau des Ã©tudiants */
 .table-wrapper td:last-child {
   white-space: nowrap;
 }
@@ -934,7 +934,7 @@ button:disabled {
 /* ===== FIN DU DESIGN PAIEMENT ===== */
 
 
-/* ===== COSTM — Paiements ===== */
+/* ===== COSTM â€” Paiements ===== */
 .page {
   width: 100%;
   max-width: 1440px;
@@ -1180,10 +1180,10 @@ button:disabled {
   }
 }
 
-/* ===== Fin COSTM — Paiements ===== */
+/* ===== Fin COSTM â€” Paiements ===== */
 
 
-/* ===== Portail personnel étudiant COSTM ===== */
+/* ===== Portail personnel Ã©tudiant COSTM ===== */
 .student-page {
   display: flex;
   flex-direction: column;
@@ -1329,7 +1329,7 @@ button:disabled {
     gap: 16px;
   }
 }
-/* ===== Fin du portail étudiant ===== */
+/* ===== Fin du portail Ã©tudiant ===== */
 
 
 /* ===== COSTM : contraste du portail en theme sombre ===== */
@@ -1348,7 +1348,7 @@ button:disabled {
   border-color: #29374c !important;
 }
 
-/* Titres : espace étudiant, programmes, présence et profil */
+/* Titres : espace Ã©tudiant, programmes, prÃ©sence et profil */
 :root[data-theme="dark"] .app-content .page-container h1,
 :root[data-theme="dark"] .app-content .page-container h2,
 :root[data-theme="dark"] .app-content .page-container h3,
@@ -1385,7 +1385,7 @@ button:disabled {
   color: #cbd5e1;
 }
 
-/* Les intitulés de section doivent rester bien visibles */
+/* Les intitulÃ©s de section doivent rester bien visibles */
 :root[data-theme="dark"] .app-content .portal-eyebrow {
   color: #c4b5fd !important;
 }
@@ -1402,8 +1402,8 @@ button:disabled {
 /* ===== Fin du correctif de contraste COSTM ===== */
 
 /* =========================================================
-   COSTM — CORRECTIF MODE SOMBRE ADMINISTRATION
-   Ajout ciblé : tableaux, formulaires et conteneurs
+   COSTM â€” CORRECTIF MODE SOMBRE ADMINISTRATION
+   Ajout ciblÃ© : tableaux, formulaires et conteneurs
    ========================================================= */
 
 :root[data-theme="dark"] .app-layout,
@@ -1511,7 +1511,7 @@ button:disabled {
   color: #a8b5c8 !important;
 }
 
-/* Défilement horizontal si un tableau est large */
+/* DÃ©filement horizontal si un tableau est large */
 :root[data-theme="dark"] .page-container {
   scrollbar-color: #465873 #141e30;
 }
@@ -1889,7 +1889,7 @@ button:disabled {
 }
 
 /* COSTM-DASHBOARD-DARK-CONTRAST-FIX */
-/* Cartes du tableau de bord : contraste adapté au thème sombre */
+/* Cartes du tableau de bord : contraste adaptÃ© au thÃ¨me sombre */
 .costm-dashboard .costm-dashboard-stat,
 .costm-dashboard .costm-dashboard-shortcut,
 .costm-dashboard .dashboard-card,
@@ -1942,7 +1942,7 @@ button:disabled {
   transition: background .2s ease, border-color .2s ease, transform .2s ease;
 }
 
-/* Respecter le thème clair si l'application l'active explicitement */
+/* Respecter le thÃ¨me clair si l'application l'active explicitement */
 html[data-theme="light"] .costm-dashboard .costm-dashboard-stat,
 html[data-theme="light"] .costm-dashboard .costm-dashboard-shortcut,
 html[data-theme="light"] .costm-dashboard .dashboard-card,
@@ -1960,7 +1960,7 @@ html[data-theme="light"] .costm-dashboard .stat-card p {
   color: #53657d !important;
 }
 
-/* Mobile : garder les cartes lisibles et éviter les débordements */
+/* Mobile : garder les cartes lisibles et Ã©viter les dÃ©bordements */
 @media (max-width: 768px) {
   .costm-dashboard .costm-dashboard-stat,
   .costm-dashboard .costm-dashboard-shortcut,
@@ -1971,3 +1971,136 @@ html[data-theme="light"] .costm-dashboard .stat-card p {
   }
 }
 /* FIN COSTM-DASHBOARD-DARK-CONTRAST-FIX */
+
+
+/* COSTM_PAIEMENTS_BOUTONS_GRIS */
+.page .paiement-btn-bleu,
+.page .paiement-btn-bleu:hover {
+  background: #e5e7eb !important;
+  background-color: #e5e7eb !important;
+  color: #374151 !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  transition: background-color .2s ease;
+}
+
+.page .paiement-btn-bleu:hover:not(:disabled) {
+  background: #d1d5db !important;
+  background-color: #d1d5db !important;
+  border-color: #9ca3af !important;
+}
+
+.page .paiement-btn-bleu:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+/* FIN COSTM_PAIEMENTS_BOUTONS_GRIS */
+
+
+
+/* COSTM_BUTTONS_UNIFIED_V4 */
+/* Boutons secondaires des pages Paiements et Annonces */
+button.secondary-button {
+  appearance: none;
+  border: 1px solid #2563eb !important;
+  border-radius: 9px;
+  padding: 9px 13px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color .18s ease, color .18s ease, transform .18s ease;
+}
+
+/* Mode clair : bleu cohérent avec les actions principales */
+html:not([data-theme="dark"]) button.secondary-button {
+  background: #172554 !important;
+  background-color: #172554 !important;
+  color: #ffffff !important;
+  border-color: #172554 !important;
+}
+
+/* Mode sombre : bouton sombre et texte clair */
+html[data-theme="dark"] button.secondary-button {
+  background: #17263c !important;
+  background-color: #17263c !important;
+  color: #f1f5f9 !important;
+  border-color: #d6a85f !important;
+}
+
+/* Survol et accessibilité */
+button.secondary-button:hover:not(:disabled) {
+  filter: brightness(.92);
+  transform: translateY(-1px);
+}
+
+button.secondary-button:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 2px;
+}
+
+button.secondary-button:disabled {
+  opacity: .55 !important;
+  cursor: not-allowed !important;
+  transform: none;
+}
+/* FIN COSTM_BUTTONS_UNIFIED_V4 */
+
+
+/* COSTM_NOUVELLE_ANNONCE_MARINE */
+button.costm-nouvelle-annonce-btn,
+button.costm-nouvelle-annonce-btn:hover,
+button.costm-nouvelle-annonce-btn:focus {
+  background: #172554 !important;
+  background-color: #172554 !important;
+  color: #ffffff !important;
+  border-color: #172554 !important;
+}
+/* COSTM-DASHBOARD-LIGHT-NUMBERS-FIX */
+/* Mode clair : rendre les chiffres des cartes lisibles sur fond blanc */
+html[data-theme="light"] .costm-dashboard .costm-dashboard-stat,
+html[data-theme="light"] .costm-dashboard .dashboard-card,
+html[data-theme="light"] .costm-dashboard .stat-card {
+  color: #172b4d !important;
+}
+
+html[data-theme="light"] .costm-dashboard .costm-dashboard-stat strong,
+html[data-theme="light"] .costm-dashboard .costm-dashboard-stat-value,
+html[data-theme="light"] .costm-dashboard .dashboard-card .student-stat,
+html[data-theme="light"] .costm-dashboard .stat-card strong {
+  color: #172b4d !important;
+}
+
+html[data-theme="light"] .costm-dashboard .costm-dashboard-stat p,
+html[data-theme="light"] .costm-dashboard .dashboard-card p,
+html[data-theme="light"] .costm-dashboard .stat-card p {
+  color: #53657d !important;
+}
+/* FIN COSTM-DASHBOARD-LIGHT-NUMBERS-FIX */
+
+
+/* COSTM-DASHBOARD-HERO-LIGHT-FIX-V2 */
+/* Mode clair : conserver la décoration d'origine et corriger le texte */
+html[data-theme="light"] .costm-dashboard .costm-dashboard-hero .portal-eyebrow {
+  color: #475569 !important;
+}
+
+html[data-theme="light"] .costm-dashboard .costm-dashboard-hero h1 {
+  color: #102748 !important;
+}
+
+html[data-theme="light"] .costm-dashboard .costm-dashboard-hero p:not(.portal-eyebrow) {
+  color: #475569 !important;
+}
+/* FIN COSTM-DASHBOARD-HERO-LIGHT-FIX-V2 */
+
+/* COSTM-DASHBOARD-HERO-WHITE-TEXT-FIX */
+/* En-tête du tableau de bord : textes blancs */
+html[data-theme="light"] .costm-dashboard .costm-dashboard-hero .portal-eyebrow,
+html[data-theme="light"] .costm-dashboard .costm-dashboard-hero h1,
+html[data-theme="light"] .costm-dashboard .costm-dashboard-hero p {
+  color: #ffffff !important;
+}
+/* FIN COSTM-DASHBOARD-HERO-WHITE-TEXT-FIX */

@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import {
   createPresenceUseCase,
@@ -263,7 +263,7 @@ export default function PresencesPage() {
         </article>
       </section>
 
-      <div className="presence-admin-actions">
+      <div className="presence-admin-actions" style={{ display: "flex", flexWrap: "wrap", gap: "14px", alignItems: "center" }}>
         <button
           type="button"
           onClick={() => {

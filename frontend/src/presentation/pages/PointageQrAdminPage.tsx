@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import QRCode from 'qrcode';
 import type { PresenceSession } from '../../domain/entities/PresenceSession';
@@ -132,7 +132,7 @@ export default function PointageQrAdminPage() {
           required
           style={{ flex: '1 1 280px', padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }}
         />
-        <button disabled={loading} type="submit" style={{ padding: '12px 18px', border: 0, borderRadius: 9, background: loading ? '#93a7d7' : '#1d4ed8', color: 'white', cursor: loading ? 'wait' : 'pointer', fontWeight: 700, boxShadow: '0 4px 10px rgba(29,78,216,.18)', transition: 'background .2s, transform .2s' }}>
+        <button disabled={loading} type="submit" style={{ padding: '12px 18px', border: 0, borderRadius: 9, background: loading ? '#64748b' : '#172554', color: 'white', cursor: loading ? 'wait' : 'pointer', fontWeight: 700, boxShadow: '0 4px 10px rgba(29,78,216,.18)', transition: 'background .2s, transform .2s' }}>
           {loading ? 'Création...' : 'Créer le QR code (5 min)'}
         </button>
       </form>

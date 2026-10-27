@@ -1,0 +1,26 @@
+﻿
+/* COSTM_PAIEMENT_BOUTONS_BLEUS */
+.page .paiement-btn-bleu,
+.page .paiement-btn-bleu:hover {
+  background: #2563eb !important;
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+  border: 1px solid #2563eb !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  transition: background-color .2s ease, border-color .2s ease;
+}
+
+.page .paiement-btn-bleu:hover:not(:disabled) {
+  background: #1d4ed8 !important;
+  background-color: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+}
+
+.page .paiement-btn-bleu:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+/* FIN COSTM_PAIEMENT_BOUTONS_BLEUS */
