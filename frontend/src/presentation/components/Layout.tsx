@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { TokenStorage } from '../../infrastructure/auth/TokenStorage';
 
@@ -16,23 +16,23 @@ function getRole(): string {
 }
 
 const adminNavigation = [
-  { label: 'Tableau de bord', to: '/dashboard', icon: '⌂' },
-  { label: 'Étudiants', to: '/admin/etudiants', icon: '♙' },
-  { label: 'Programmes', to: '/admin/programmes', icon: '▤' },
-  { label: 'Annonces', to: '/admin/annonces', icon: '◉' },
-  { label: 'Notes', to: '/admin/notes', icon: '✎' },
-  { label: 'Présences', to: '/admin/presences', icon: '◷' },
-  { label: 'Pointage QR', to: '/admin/pointage-qr', icon: '▦' },
-  { label: 'Paiements', to: '/admin/paiements', icon: '¤' },
-  { label: 'Diplômes', to: '/admin/diplomes', icon: '◇' },
+  { label: 'Tableau de bord', to: '/dashboard', icon: '⌂', section: 'PILOTAGE' },
+  { label: 'Étudiants', to: '/admin/etudiants', icon: '♙', section: 'GESTION ACADEMIQUE' },
+  { label: 'Programmes', to: '/admin/programmes', icon: '▤', section: 'GESTION ACADEMIQUE' },
+  { label: 'Annonces', to: '/admin/annonces', icon: '◉', section: 'COMMUNICATION' },
+  { label: 'Notes', to: '/admin/notes', icon: '✎', section: 'GESTION ACADEMIQUE' },
+  { label: 'Présences', to: '/admin/presences', icon: '◷', section: 'GESTION ACADEMIQUE' },
+  { label: 'Pointage QR', to: '/admin/pointage-qr', icon: '▦', section: 'GESTION ACADEMIQUE' },
+  { label: 'Paiements', to: '/admin/paiements', icon: '¤', section: 'GESTION FINANCIERE' },
+  { label: 'Diplômes', to: '/admin/diplomes', icon: '◇', section: 'CERTIFICATION' },
 ];
 
 const studentNavigation = [
-  { label: 'Annonces', to: '/etudiant/annonces', icon: '▤' },
-  { label: 'Annonces spécifiques', to: '/etudiant/annonces-specifiques', icon: '◉' },
-  { label: 'Cours', to: '/etudiant/cours', icon: '▣' },
-  { label: 'Présence', to: '/etudiant/presence', icon: '▦' },
-  { label: 'Profil', to: '/etudiant/profil', icon: '♙' },
+  { label: 'Profil', to: '/etudiant/profil', icon: '♙', section: 'ESPACE ETUDIANT' },
+  { label: 'Cours', to: '/etudiant/cours', icon: '▣', section: 'ESPACE ETUDIANT' },
+  { label: 'Présence', to: '/etudiant/presence', icon: '▦', section: 'ESPACE ETUDIANT' },
+  { label: 'Annonces', to: '/etudiant/annonces', icon: '▤', section: 'ESPACE ETUDIANT' },
+  { label: 'Annonces spécifiques', to: '/etudiant/annonces-specifiques', icon: '◉', section: 'ESPACE ETUDIANT' },
 ];
 
 export default function Layout() {
@@ -79,16 +79,21 @@ export default function Layout() {
         </div>
 
         <nav className="sidebar-nav">
-          {navigation.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === '/dashboard' || item.to === '/etudiant/annonces'} onClick={() => setMobileMenuOpen(false)}
-              className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
-            >
-              <span className="sidebar-icon" aria-hidden="true">{item.icon}</span>
-              <span>{item.label}</span>
-            </NavLink>
+          {navigation.map((item, index) => (
+            <Fragment key={item.to}>
+              {(!isStudent && (index === 0 || item.section !== navigation[index - 1]?.section)) && (
+                <div className="sidebar-section">{item.section}</div>
+              )}
+              <NavLink
+                to={item.to}
+                end={item.to === '/dashboard' || item.to === '/etudiant/annonces'}
+                onClick={() => setMobileMenuOpen(false)}
+                className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
+              >
+                <span className="sidebar-icon" aria-hidden="true">{item.icon}</span>
+                <span>{item.label}</span>
+              </NavLink>
+            </Fragment>
           ))}
         </nav>
 

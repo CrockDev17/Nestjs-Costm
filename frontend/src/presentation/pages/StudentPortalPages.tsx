@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BrowserQRCodeReader } from '@zxing/browser';
 import { Link } from 'react-router-dom';
 import { apiClient } from '../../infrastructure/http/apiClient';
@@ -252,7 +252,7 @@ export function StudentCoursesPage() {
                 {Boolean(programme.code) && <span className="portal-tag">{text(programme.code)}</span>}
                 {Boolean(programme.niveau) && <p className="portal-muted">Niveau : {text(programme.niveau)}</p>}
                 <p className="portal-body">{text(programme.description)}</p>
-                {String(programme.id ?? '') === String(student?.programme?.id ?? '') && <span className="portal-current-badge">Votre programme</span>}
+                {Boolean(programme.id && student?.programme?.id && String(programme.id) === String(student.programme.id)) && <span className="portal-current-badge">Votre programme</span>}
               </article>
             ))}
           </div>

@@ -1,4 +1,10 @@
-﻿import { IsEmail, IsOptional, IsString, IsNotEmpty } from 'class-validator';
+﻿import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  IsNotEmpty,
+  IsUUID,
+} from 'class-validator';
 
 export class UpdateEtudiantDto {
   @IsOptional()
@@ -19,4 +25,8 @@ export class UpdateEtudiantDto {
   @IsOptional()
   @IsEmail()
   email?: string;
+
+  @IsOptional()
+  @IsUUID()
+  programmeId?: string;
 }

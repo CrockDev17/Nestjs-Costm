@@ -2104,3 +2104,22 @@ html[data-theme="light"] .costm-dashboard .costm-dashboard-hero p {
   color: #ffffff !important;
 }
 /* FIN COSTM-DASHBOARD-HERO-WHITE-TEXT-FIX */
+
+/* COSTM - FIX LISIBILITE TABLEAUX AU SURVOL EN MODE SOMBRE */
+:root[data-theme="dark"] main table tbody tr:hover,
+:root[data-theme="dark"] .page-container table tbody tr:hover {
+  background-color: #24334b !important;
+}
+
+:root[data-theme="dark"] main table tbody tr:hover > td,
+:root[data-theme="dark"] .page-container table tbody tr:hover > td {
+  background-color: #24334b !important;
+  color: #f1f5f9 !important;
+  border-color: #40516b !important;
+}
+
+:root[data-theme="dark"] main table tbody tr:hover > td *,
+:root[data-theme="dark"] .page-container table tbody tr:hover > td * {
+  color: inherit;
+}
+/* FIN FIX LISIBILITE TABLEAUX */

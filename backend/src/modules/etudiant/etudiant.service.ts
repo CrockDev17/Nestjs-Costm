@@ -11,6 +11,7 @@ import { Etudiant } from './domain/etudiant.entity.js';
 import { CreateEtudiantDto } from './dto/create-etudiant.dto.js';
 import { UpdateEtudiantDto } from './dto/update-etudiant.dto.js';
 import { User } from '../user/domain/user.entity.js';
+import { Programme } from '../programme/domain/programme.entity.js';
 
 @Injectable()
 export class EtudiantService {
@@ -20,20 +21,34 @@ export class EtudiantService {
 
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
+    @InjectRepository(Programme)
+    private readonly programmeRepository: Repository<Programme>,
   ) {}
 
   async create(
     createEtudiantDto: CreateEtudiantDto,
   ): Promise<Etudiant> {
-    const etudiant = this.etudiantRepository.create(
-      createEtudiantDto,
-    );
+    const { programmeId, ...donneesEtudiant } = createEtudiantDto;
 
-    return this.etudiantRepository.save(etudiant);
+    const programme = await this.programmeRepository.findOne({
+      where: { id: programmeId },
+    });
+
+    if (!programme) {
+      throw new NotFoundException('Programme introuvable');
+    }
+
+    const etudiant = this.etudiantRepository.create({
+      ...donneesEtudiant,
+      programme,
+    });
+
+    return await this.etudiantRepository.save(etudiant);
   }
 
   async findAll(): Promise<Etudiant[]> {
-    return this.etudiantRepository.find({
+    return await this.etudiantRepository.find({
       relations: {
         programme: true,
         presences: true,
@@ -69,7 +84,9 @@ export class EtudiantService {
     const user = await this.userRepository.findOne({
       where: { id: userId },
       relations: {
-        etudiant: true,
+        etudiant: {
+          programme: true,
+        },
       },
     });
 
@@ -92,6 +109,9 @@ export class EtudiantService {
   ): Promise<Etudiant> {
     const etudiant = await this.etudiantRepository.findOne({
       where: { id },
+      relations: {
+        programme: true,
+      },
     });
 
     if (!etudiant) {
@@ -100,9 +120,25 @@ export class EtudiantService {
       );
     }
 
-    Object.assign(etudiant, updateEtudiantDto);
+    const { programmeId, ...donneesEtudiant } = updateEtudiantDto;
 
-    return this.etudiantRepository.save(etudiant);
+    Object.assign(etudiant, donneesEtudiant);
+
+    if (programmeId) {
+      const programme = await this.programmeRepository.findOne({
+        where: { id: programmeId },
+      });
+
+      if (!programme) {
+        throw new NotFoundException('Programme introuvable');
+      }
+
+      etudiant.programme = programme;
+    }
+
+    await this.etudiantRepository.save(etudiant);
+
+    return this.findOne(id);
   }
 
   async remove(id: string): Promise<{ message: string }> {

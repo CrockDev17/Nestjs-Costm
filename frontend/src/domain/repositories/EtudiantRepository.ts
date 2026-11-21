@@ -1,4 +1,4 @@
-﻿import type { Etudiant } from '../entities/Etudiant';
+import type { Etudiant } from '../entities/Etudiant';
 
 export interface EtudiantRepository {
   list(): Promise<Etudiant[]>;
@@ -9,6 +9,7 @@ export interface EtudiantRepository {
     nom: string;
     prenom: string;
     email: string;
+    programmeId: string;
   }): Promise<Etudiant>;
 
   update(
@@ -18,6 +19,7 @@ export interface EtudiantRepository {
       nom: string;
       prenom: string;
       email: string;
+      programmeId: string;
     }>
   ): Promise<Etudiant>;
 
