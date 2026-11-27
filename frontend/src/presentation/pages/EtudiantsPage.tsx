@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { etudiantRepository } from '../di/containers';
+import { etudiantRepository, programmeRepository } from '../di/containers';
 import { apiClient } from '../../infrastructure/http/apiClient';
 import type { Etudiant } from '../../domain/entities/Etudiant';
+import type { Programme } from '../../domain/entities/Programme';
 
 type FormulaireEtudiant = {
   matricule: string;
   nom: string;
   prenom: string;
   email: string;
+  programmeId: string;
 };
 
 const formulaireVide: FormulaireEtudiant = {
@@ -16,6 +18,7 @@ const formulaireVide: FormulaireEtudiant = {
   nom: '',
   prenom: '',
   email: '',
+  programmeId: '',
 };
 
 function extraireErreur(error: unknown, messageParDefaut: string): string {
@@ -33,6 +36,7 @@ function extraireErreur(error: unknown, messageParDefaut: string): string {
 
 export default function EtudiantsPage() {
   const [etudiants, setEtudiants] = useState<Etudiant[]>([]);
+  const [programmes, setProgrammes] = useState<Programme[]>([]);
   const [recherche, setRecherche] = useState('');
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState('');
@@ -49,6 +53,24 @@ export default function EtudiantsPage() {
   const [emailCompte, setEmailCompte] = useState('');
   const [motDePasseCompte, setMotDePasseCompte] = useState('');
   const [creationCompte, setCreationCompte] = useState(false);
+
+  useEffect(() => {
+    let actif = true;
+
+    programmeRepository.list()
+      .then((resultat) => {
+        if (actif) setProgrammes(resultat);
+      })
+      .catch((error: unknown) => {
+        if (actif) {
+          setErreur(extraireErreur(error, 'Impossible de charger les programmes.'));
+        }
+      });
+
+    return () => {
+      actif = false;
+    };
+  }, []);
 
   const chargerEtudiants = useCallback(async () => {
     setChargement(true);
@@ -80,6 +102,7 @@ export default function EtudiantsPage() {
       nom: etudiant.nom,
       prenom: etudiant.prenom,
       email: etudiant.email,
+      programmeId: etudiant.programme?.id ?? '',
     });
     setErreur('');
     setMessage('');
@@ -108,11 +131,17 @@ export default function EtudiantsPage() {
       nom: formulaire.nom.trim(),
       prenom: formulaire.prenom.trim(),
       email: formulaire.email.trim(),
+      programmeId: formulaire.programmeId,
     };
 
     try {
       if (etudiantEnEdition) {
-        await etudiantRepository.update(etudiantEnEdition.id, donnees);
+        const { programmeId, ...donneesSansProgramme } = donnees;
+        const donneesModification = programmeId
+          ? { ...donneesSansProgramme, programmeId }
+          : donneesSansProgramme;
+
+        await etudiantRepository.update(etudiantEnEdition.id, donneesModification);
         setMessage('Étudiant modifié avec succès.');
         setEtudiantEnEdition(null);
         setFormulaire(formulaireVide);
@@ -361,6 +390,26 @@ export default function EtudiantsPage() {
               }
               required
             />
+          </label>
+          <label>
+            Programme
+            <select
+              value={formulaire.programmeId}
+              onChange={(event) =>
+                setFormulaire({
+                  ...formulaire,
+                  programmeId: event.target.value,
+                })
+              }
+              required={!etudiantEnEdition}
+            >
+              <option value="">Sélectionner un programme</option>
+              {programmes.map((programme) => (
+                <option key={programme.id} value={programme.id}>
+                  {programme.code} — {programme.nom} ({programme.niveau})
+                </option>
+              ))}
+            </select>
           </label>
 
           <div className="student-form-actions">

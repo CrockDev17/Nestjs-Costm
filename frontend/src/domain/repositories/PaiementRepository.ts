@@ -1,4 +1,4 @@
-import type { Paiement, PaiementStatut } from '../entities/Paiement';
+﻿import type { Paiement, PaiementStatut } from '../entities/Paiement';
 
 export interface CreatePaiementData {
   montant: number;
@@ -9,7 +9,11 @@ export interface CreatePaiementData {
   etudiantId: string;
 }
 
+export type UpdatePaiementData = Partial<CreatePaiementData>;
+
 export interface PaiementRepository {
   list(): Promise<Paiement[]>;
   create(data: CreatePaiementData): Promise<Paiement>;
+  update(id: string, data: UpdatePaiementData): Promise<Paiement>;
+  delete(id: string): Promise<void>;
 }

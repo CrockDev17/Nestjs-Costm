@@ -1,0 +1,1310 @@
+﻿DIAGNOSTIC POINTAGE QR COSTM - 10/22/2026 09:55:55
+
+
+========== C:\Users\CROCK\Desktop\projet-costm\frontend\src\presentation\pages\PointageQrStudentPage.tsx ==========
+
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { scanPresenceSessionUseCase } from '../di/containers';
+
+export default function PointageQrStudentPage() {
+  const { token } = useParams<{ token: string }>();
+  const navigate = useNavigate();
+  const [status, setStatus] = useState('Vérification de la session...');
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function scan() {
+      if (!token) {
+        setStatus('Le lien du QR code est invalide.');
+        return;
+      }
+
+      const accessToken = localStorage.getItem('costm_access_token');
+
+      if (!accessToken) {
+        navigate('/login', {
+          replace: true,
+          state: { from: `/pointage/${token}` },
+        });
+        return;
+      }
+
+      try {
+        await scanPresenceSessionUseCase.execute(token);
+        if (!cancelled) {
+          setSuccess(true);
+          setStatus('Présence enregistrée avec succès.');
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setSuccess(false);
+          setStatus(e instanceof Error ? e.message : 'Le pointage a échoué. Le QR code a peut-être expiré ou a déjà été utilisé.');
+        }
+      }
+    }
+
+    void scan();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, navigate]);
+
+  return (
+    <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: '#f1f5f9', color: '#172033' }}>
+      <section style={{ width: '100%', maxWidth: 480, padding: 28, background: 'white', borderRadius: 16, boxShadow: '0 10px 30px rgba(15,23,42,0.08)', textAlign: 'center' }}>
+        <h1 style={{ marginTop: 0 }}>Pointage COSTM</h1>
+        <p style={{ fontSize: 17, lineHeight: 1.6 }}>{status}</p>
+        {success && <p style={{ color: '#15803d', fontWeight: 700 }}>Tu peux maintenant retourner à tes activités.</p>}
+        {!success && !status.includes('Vérification') && (
+          <button type="button" onClick={() => navigate('/login')} style={{ padding: '10px 16px', border: 0, borderRadius: 8, background: '#1d4ed8', color: 'white', cursor: 'pointer' }}>
+            Retour à la connexion
+          </button>
+        )}
+      </section>
+    </main>
+  );
+}
+
+
+
+========== C:\Users\CROCK\Desktop\projet-costm\frontend\src\presentation\pages\PointageQrAdminPage.tsx ==========
+
+import { useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
+import QRCode from 'qrcode';
+import type { PresenceSession } from '../../domain/entities/PresenceSession';
+import {
+  createPresenceSessionUseCase,
+  listPresenceSessionsUseCase,
+  closePresenceSessionUseCase,
+} from '../di/containers';
+
+export default function PointageQrAdminPage() {
+  const [cours, setCours] = useState('');
+  const [sessions, setSessions] = useState<PresenceSession[]>([]);
+  const [active, setActive] = useState<PresenceSession | null>(null);
+  const [qr, setQr] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const [, setTick] = useState(0);
+
+  async function loadSessions() {
+    setRefreshing(true);
+    try {
+      const data = await listPresenceSessionsUseCase.execute();
+      setSessions(data);
+      setError('');
+    } catch {
+      setError('Impossible de charger les sessions. Vérifie que le backend fonctionne et que tu es connecté comme administrateur.');
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadSessions();
+  }, []);
+
+  useEffect(() => {
+    if (!active) {
+      setQr('');
+      return;
+    }
+
+    const url = `${window.location.origin}/pointage/${active.token}`;
+    let cancelled = false;
+
+    QRCode.toDataURL(url, { width: 280, margin: 2 })
+      .then((data) => {
+        if (!cancelled) setQr(data);
+      })
+      .catch(() => {
+        if (!cancelled) setError('Impossible de générer le QR code.');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [active]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setTick((n) => n + 1), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  function expired(session: PresenceSession) {
+    return Boolean(session.closedAt) || Date.now() >= new Date(session.expiresAt).getTime();
+  }
+
+  function remaining(session: PresenceSession) {
+    const seconds = Math.max(0, Math.floor((new Date(session.expiresAt).getTime() - Date.now()) / 1000));
+    return `${Math.floor(seconds / 60)} min ${String(seconds % 60).padStart(2, '0')} s`;
+  }
+
+  async function createSession(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError('');
+    setMessage('');
+    setLoading(true);
+
+    try {
+      const session = await createPresenceSessionUseCase.execute(cours.trim());
+      setActive(session);
+      setCours('');
+      setMessage('Session créée. Le QR code est valable 5 minutes.');
+      await loadSessions();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Échec de création de la session.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function closeSession(session: PresenceSession) {
+    setError('');
+    setMessage('');
+
+    try {
+      await closePresenceSessionUseCase.execute(session.id);
+      setMessage('Session clôturée.');
+      if (active?.id === session.id) {
+        setActive({ ...session, closedAt: new Date().toISOString() });
+      }
+      await loadSessions();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Impossible de clôturer la session.');
+    }
+  }
+
+  async function showSession(session: PresenceSession) {
+    setActive(session);
+    setError('');
+    setMessage('');
+  }
+
+  return (
+    <main style={{ maxWidth: 1000, margin: '0 auto', padding: 24, color: '#172033' }}>
+      <h1 style={{ fontSize: 28, marginBottom: 8 }}>Pointage par QR code</h1>
+      <p style={{ color: '#64748b', marginTop: 0 }}>
+        Crée une session pour un cours. Le QR code expire automatiquement après 5 minutes.
+      </p>
+
+      {error && <p role="alert" style={{ background: '#fee2e2', color: '#991b1b', padding: 12, borderRadius: 8 }}>{error}</p>}
+      {message && <p role="status" style={{ background: '#dcfce7', color: '#166534', padding: 12, borderRadius: 8 }}>{message}</p>}
+
+      <form onSubmit={createSession} style={{ display: 'flex', gap: 12, flexWrap: 'wrap', margin: '24px 0', padding: 18, border: '1px solid #e2e8f0', borderRadius: 12 }}>
+        <input
+          value={cours}
+          onChange={(e) => setCours(e.target.value)}
+          placeholder="Nom du cours (ex. Réseaux informatiques)"
+          maxLength={120}
+          required
+          style={{ flex: '1 1 280px', padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }}
+        />
+        <button disabled={loading} type="submit" style={{ padding: '12px 18px', border: 0, borderRadius: 9, background: loading ? '#93a7d7' : '#1d4ed8', color: 'white', cursor: loading ? 'wait' : 'pointer', fontWeight: 700, boxShadow: '0 4px 10px rgba(29,78,216,.18)', transition: 'background .2s, transform .2s' }}>
+          {loading ? 'Création...' : 'Créer le QR code (5 min)'}
+        </button>
+      </form>
+
+      {active && (
+        <section style={{ marginBottom: 28, padding: 20, border: '1px solid #bfdbfe', borderRadius: 12, background: '#eff6ff' }}>
+          <h2 style={{ marginTop: 0 }}>{active.cours}</h2>
+          <p>
+            État : <strong>{expired(active) ? 'Expirée ou clôturée' : 'Active'}</strong>
+            {!expired(active) && <> · Temps restant : <strong>{remaining(active)}</strong></>}
+          </p>
+          {qr && <img src={qr} alt={`QR code pour ${active.cours}`} width={280} height={280} style={{ display: 'block', background: 'white', padding: 8, borderRadius: 8 }} />}
+          <p style={{ overflowWrap: 'anywhere', fontSize: 13 }}>Lien : {`${window.location.origin}/pointage/${active.token}`}</p>
+          {!expired(active) && (
+            <button type="button" onClick={() => void closeSession(active)} style={{ padding: '10px 16px', border: '1px solid #fecaca', borderRadius: 9, background: '#fff1f2', color: '#b91c1c', cursor: 'pointer', fontWeight: 700, boxShadow: '0 2px 5px rgba(185,28,28,.08)' }}>
+              Clôturer la session
+            </button>
+          )}
+          <h3>Étudiants pointés : {active.presences?.length ?? 0}</h3>
+          {active.presences?.length ? (
+            <ul>
+              {active.presences.map((p) => (
+                <li key={p.id}>{p.etudiant?.matricule ?? 'Matricule inconnu'} — {p.etudiant ? `${p.etudiant.nom} ${p.etudiant.prenom}` : 'Étudiant'} — {p.statut}</li>
+              ))}
+            </ul>
+          ) : <p>La liste apparaîtra lorsque les présences de cette session seront chargées.</p>}
+        </section>
+      )}
+
+      <h2>Sessions créées</h2>
+      {sessions.length === 0 ? <p>Aucune session pour le moment.</p> : (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'left', padding: 10, borderBottom: '1px solid #cbd5e1' }}>Cours</th>
+                <th style={{ textAlign: 'left', padding: 10, borderBottom: '1px solid #cbd5e1' }}>Expiration</th>
+                <th style={{ textAlign: 'left', padding: 10, borderBottom: '1px solid #cbd5e1' }}>État</th>
+                <th style={{ textAlign: 'left', padding: 10, borderBottom: '1px solid #cbd5e1' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sessions.map((session) => (
+                <tr key={session.id}>
+                  <td style={{ padding: 10, borderBottom: '1px solid #e2e8f0' }}>{session.cours}</td>
+                  <td style={{ padding: 10, borderBottom: '1px solid #e2e8f0' }}>{new Date(session.expiresAt).toLocaleString()}</td>
+                  <td style={{ padding: 10, borderBottom: '1px solid #e2e8f0' }}>{expired(session) ? 'Expirée / clôturée' : 'Active'}</td>
+                  <td style={{ padding: 10, borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>
+                    <button type="button" onClick={() => void showSession(session)} style={{ padding: '8px 13px', border: '1px solid #bfdbfe', borderRadius: 8, background: '#eff6ff', color: '#1d4ed8', fontWeight: 700, cursor: 'pointer', marginRight: 8 }}>▦ Voir le QR</button>{' '}
+                    {!expired(session) && <button type="button" onClick={() => void closeSession(session)} style={{ padding: '8px 13px', border: '1px solid #fecaca', borderRadius: 8, background: '#fff1f2', color: '#b91c1c', fontWeight: 700, cursor: 'pointer' }}>✕ Clôturer</button>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <button type="button" disabled={refreshing} onClick={() => void loadSessions()} style={{ marginTop: 16, padding: '10px 16px', border: '1px solid #cbd5e1', borderRadius: 9, background: refreshing ? '#e2e8f0' : 'white', color: '#334155', fontWeight: 700, cursor: refreshing ? 'wait' : 'pointer', boxShadow: '0 2px 5px rgba(15,23,42,.05)' }}>{refreshing ? '↻ Actualisation...' : '↻ Actualiser les sessions'}</button>
+    </main>
+  );
+}
+
+
+
+
+
+========== C:\Users\CROCK\Desktop\projet-costm\frontend\src\presentation\pages\PresencesPage.tsx ==========
+
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
+import {
+  createPresenceUseCase,
+  listPresencesUseCase,
+  updatePresenceUseCase,
+  deletePresenceUseCase,
+  etudiantRepository,
+} from '../di/containers';
+import type { Presence, PresenceStatut } from '../../domain/entities/Presence';
+import type { Etudiant } from '../../domain/entities/Etudiant';
+
+type PresenceForm = {
+  etudiantId: string;
+  date: string;
+  statut: PresenceStatut;
+  justification: string;
+};
+
+function today(): string {
+  const date = new Date();
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return localDate.toISOString().slice(0, 10);
+}
+
+function createInitialForm(): PresenceForm {
+  return {
+    etudiantId: '',
+    date: today(),
+    statut: 'PRESENT',
+    justification: '',
+  };
+}
+
+function getErrorMessage(error: unknown): string {
+  if (typeof error === 'object' && error !== null && 'response' in error) {
+    const response = error.response;
+    if (typeof response === 'object' && response !== null && 'data' in response) {
+      const data = response.data;
+      if (typeof data === 'object' && data !== null && 'message' in data) {
+        const message = data.message;
+        if (Array.isArray(message)) return message.join(', ');
+        if (typeof message === 'string') return message;
+      }
+    }
+  }
+  return error instanceof Error
+    ? error.message
+    : 'Une erreur est survenue lors de l’opération.';
+}
+
+const statusLabels: Record<PresenceStatut, string> = {
+  PRESENT: 'Présent',
+  ABSENT: 'Absent',
+  RETARD: 'En retard',
+  EXCUSE: 'Excusé',
+};
+
+export default function PresencesPage() {
+  const [presences, setPresences] = useState<Presence[]>([]);
+  const [etudiants, setEtudiants] = useState<Etudiant[]>([]);
+  const [form, setForm] = useState<PresenceForm>(createInitialForm);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [statutFilter, setStatutFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [presenceData, etudiantData] = await Promise.all([
+        listPresencesUseCase.execute(),
+        etudiantRepository.list(),
+      ]);
+      setPresences(presenceData);
+      setEtudiants(etudiantData);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
+
+  function handleChange(
+    event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
+  ) {
+    const { name, value } = event.target;
+    setForm((current) => ({ ...current, [name]: value }));
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setForm(createInitialForm());
+    setError('');
+    setSuccess('');
+  }
+
+  function startEdit(presence: Presence) {
+    setEditingId(presence.id);
+    setForm({
+      etudiantId:
+        presence.etudiantId ??
+        presence.etudiant?.id ??
+        '',
+      date: String(presence.date).slice(0, 10),
+      statut: presence.statut,
+      justification: presence.justification ?? '',
+    });
+    setError('');
+    setSuccess('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError('');
+    setSuccess('');
+    setSaving(true);
+
+    try {
+      const payload = {
+        etudiantId: form.etudiantId,
+        date: form.date,
+        statut: form.statut,
+        justification: form.justification.trim(),
+      };
+
+      if (editingId) {
+        await updatePresenceUseCase.execute(editingId, payload);
+        setSuccess('Présence modifiée avec succès.');
+      } else {
+        await createPresenceUseCase.execute(payload);
+        setSuccess('Présence enregistrée avec succès.');
+      }
+
+      setEditingId(null);
+      setForm(createInitialForm());
+      await loadData();
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete(presence: Presence) {
+    const label = presenceStudentLabel(presence);
+    const confirmed = window.confirm(
+      `Voulez-vous vraiment supprimer la présence de ${label} du ${String(presence.date).slice(0, 10)} ? Cette action est définitive.`,
+    );
+
+    if (!confirmed) return;
+
+    setError('');
+    setSuccess('');
+    setDeletingId(presence.id);
+
+    try {
+      await deletePresenceUseCase.execute(presence.id);
+      if (editingId === presence.id) {
+        setEditingId(null);
+        setForm(createInitialForm());
+      }
+      setSuccess('Présence supprimée avec succès.');
+      await loadData();
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  const filteredPresences = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    return presences.filter((presence) => {
+      const etudiant = presence.etudiant
+        ? `${presence.etudiant.matricule ?? ''} ${presence.etudiant.nom ?? ''} ${presence.etudiant.prenom ?? ''}`
+        : (() => {
+            const student = etudiants.find((item) => item.id === presence.etudiantId);
+            return student
+              ? `${student.matricule} ${student.nom} ${student.prenom}`
+              : presence.etudiantId ?? '';
+          })();
+
+      const date = String(presence.date).slice(0, 10);
+
+      return (
+        (!query ||
+          etudiant.toLowerCase().includes(query) ||
+          (presence.justification ?? '').toLowerCase().includes(query)) &&
+        (!statutFilter || presence.statut === statutFilter) &&
+        (!dateFilter || date === dateFilter)
+      );
+    });
+  }, [presences, etudiants, search, statutFilter, dateFilter]);
+
+  function studentLabel(student: Etudiant): string {
+    return `${student.matricule} — ${student.nom} ${student.prenom}`;
+  }
+
+  function presenceStudentLabel(presence: Presence): string {
+    if (presence.etudiant) {
+      return `${presence.etudiant.matricule ?? ''} — ${presence.etudiant.nom ?? ''} ${presence.etudiant.prenom ?? ''}`;
+    }
+    const student = etudiants.find((item) => item.id === presence.etudiantId);
+    return student ? studentLabel(student) : presence.etudiantId ?? '—';
+  }
+
+  return (
+    <section className="page-container">
+      <h1>Gestion des présences</h1>
+      <p>Enregistrez, modifiez et consultez les présences des étudiants.</p>
+
+      {error && <p className="error-message" role="alert">{error}</p>}
+      {success && <p role="status">{success}</p>}
+
+      <form onSubmit={handleSubmit}>
+        <h2>{editingId ? 'Modifier une présence' : 'Enregistrer une présence'}</h2>
+
+        <div>
+          <label htmlFor="etudiantId">Étudiant *</label>
+          <select
+            id="etudiantId"
+            name="etudiantId"
+            value={form.etudiantId}
+            onChange={handleChange}
+            required
+          >
+            <option value="">Sélectionner un étudiant</option>
+            {etudiants.map((student) => (
+              <option key={student.id} value={student.id}>
+                {studentLabel(student)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="date">Date *</label>
+          <input
+            id="date"
+            name="date"
+            type="date"
+            value={form.date}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div>
+          <label htmlFor="statut">Statut *</label>
+          <select
+            id="statut"
+            name="statut"
+            value={form.statut}
+            onChange={handleChange}
+            required
+          >
+            {Object.entries(statusLabels).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="justification">Justification (facultatif)</label>
+          <textarea
+            id="justification"
+            name="justification"
+            value={form.justification}
+            onChange={handleChange}
+            rows={3}
+            placeholder="Motif d’absence ou de retard..."
+          />
+        </div>
+
+        <button type="submit" disabled={saving || etudiants.length === 0}>
+          {saving
+            ? 'Enregistrement...'
+            : editingId
+              ? 'Enregistrer les modifications'
+              : 'Enregistrer la présence'}
+        </button>
+
+        {editingId && (
+          <button type="button" onClick={cancelEdit} disabled={saving}>
+            Annuler la modification
+          </button>
+        )}
+
+        {!loading && etudiants.length === 0 && (
+          <p>Ajoutez d’abord un étudiant avant d’enregistrer une présence.</p>
+        )}
+      </form>
+
+      <hr />
+
+      <h2>Historique ({filteredPresences.length})</h2>
+
+      <div>
+        <input
+          type="search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Rechercher un étudiant ou une justification..."
+          aria-label="Rechercher une présence"
+        />
+
+        <input
+          type="date"
+          value={dateFilter}
+          onChange={(event) => setDateFilter(event.target.value)}
+          aria-label="Filtrer par date"
+        />
+
+        <select
+          value={statutFilter}
+          onChange={(event) => setStatutFilter(event.target.value)}
+          aria-label="Filtrer par statut"
+        >
+          <option value="">Tous les statuts</option>
+          {Object.entries(statusLabels).map(([value, label]) => (
+            <option key={value} value={value}>{label}</option>
+          ))}
+        </select>
+
+        <button type="button" onClick={() => void loadData()} disabled={loading}>
+          {loading ? 'Chargement...' : 'Actualiser'}
+        </button>
+      </div>
+
+      {loading && <p>Chargement des présences...</p>}
+      {!loading && filteredPresences.length === 0 && (
+        <p>Aucune présence ne correspond aux filtres.</p>
+      )}
+
+      {!loading && filteredPresences.length > 0 && (
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Étudiant</th>
+                <th>Date</th>
+                <th>Statut</th>
+                <th>Justification</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPresences.map((presence) => (
+                <tr key={presence.id}>
+                  <td>{presenceStudentLabel(presence)}</td>
+                  <td>{String(presence.date).slice(0, 10)}</td>
+                  <td>{statusLabels[presence.statut] ?? presence.statut}</td>
+                  <td>{presence.justification || '—'}</td>
+                  <td>
+                    <button
+                      type="button"
+                      onClick={() => startEdit(presence)}
+                      disabled={saving || deletingId !== null}
+                    >
+                      Modifier
+                    </button>
+                    {' '}
+                    <button
+                      type="button"
+                      onClick={() => void handleDelete(presence)}
+                      disabled={saving || deletingId !== null}
+                    >
+                      {deletingId === presence.id ? 'Suppression...' : 'Supprimer'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
+
+
+========== C:\Users\CROCK\Desktop\projet-costm\frontend\src\application\presences\ScanPresenceSessionUseCase.ts ==========
+
+import type { PresenceSessionRepository } from '../../domain/repositories/PresenceSessionRepository';
+
+export class ScanPresenceSessionUseCase {
+  private readonly repository: PresenceSessionRepository;
+
+  constructor(repository: PresenceSessionRepository) {
+    this.repository = repository;
+  }
+
+  execute(token: string) {
+    return this.repository.scan(token);
+  }
+}
+
+
+
+========== C:\Users\CROCK\Desktop\projet-costm\frontend\src\application\presences\CreatePresenceUseCase.ts ==========
+
+import type { Presence } from '../../domain/entities/Presence';
+import type {
+  CreatePresenceData,
+  PresenceRepository,
+} from '../../domain/repositories/PresenceRepository';
+
+export class CreatePresenceUseCase {
+  private readonly presenceRepository: PresenceRepository;
+
+  constructor(presenceRepository: PresenceRepository) {
+    this.presenceRepository = presenceRepository;
+  }
+
+  execute(data: CreatePresenceData): Promise<Presence> {
+    if (!data.etudiantId) {
+      throw new Error('Veuillez sélectionner un étudiant.');
+    }
+
+    if (!data.date || Number.isNaN(Date.parse(data.date))) {
+      throw new Error('Veuillez saisir une date valide.');
+    }
+
+    if (!['PRESENT', 'ABSENT', 'RETARD', 'EXCUSE'].includes(data.statut)) {
+      throw new Error('Le statut de présence est invalide.');
+    }
+
+    return this.presenceRepository.create({
+      ...data,
+      justification: data.justification?.trim() || undefined,
+    });
+  }
+}
+
+
+========== C:\Users\CROCK\Desktop\projet-costm\frontend\src\infrastructure\repositories\HttpPresenceRepository.ts ==========
+
+import { apiClient } from '../http/apiClient';
+import type { Presence } from '../../domain/entities/Presence';
+import type {
+  CreatePresenceData,
+  UpdatePresenceData,
+  PresenceRepository,
+} from '../../domain/repositories/PresenceRepository';
+
+export class HttpPresenceRepository implements PresenceRepository {
+  async list(): Promise<Presence[]> {
+    const { data } = await apiClient.get<Presence[]>('/presences');
+    return data;
+  }
+
+  async create(payload: CreatePresenceData): Promise<Presence> {
+    const { data } = await apiClient.post<Presence>('/presences', payload);
+    return data;
+  }
+
+  async update(id: string, payload: UpdatePresenceData): Promise<Presence> {
+    const { data } = await apiClient.patch<Presence>(`/presences/${id}`, payload);
+    return data;
+  }
+
+  async delete(id: string): Promise<void> {
+    await apiClient.delete(`/presences/${id}`);
+  }
+}
+
+
+========== C:\Users\CROCK\Desktop\projet-costm\frontend\src\infrastructure\repositories\HttpPresenceSessionRepository.ts ==========
+
+import { apiClient } from '../http/apiClient';
+import type { PresenceSession } from '../../domain/entities/PresenceSession';
+import type { PresenceSessionRepository } from '../../domain/repositories/PresenceSessionRepository';
+
+export class HttpPresenceSessionRepository implements PresenceSessionRepository {
+  async create(cours: string): Promise<PresenceSession> {
+    const response = await apiClient.post<PresenceSession>(
+      '/presences/sessions',
+      { cours },
+    );
+    return response.data;
+  }
+
+  async list(): Promise<PresenceSession[]> {
+    const response = await apiClient.get<PresenceSession[]>('/presences/sessions');
+    return response.data;
+  }
+
+  async close(id: string): Promise<PresenceSession> {
+    const response = await apiClient.patch<PresenceSession>(
+      `/presences/sessions/${id}/close`,
+    );
+    return response.data;
+  }
+
+  async scan(token: string): Promise<unknown> {
+    const response = await apiClient.post(
+      `/presences/sessions/${encodeURIComponent(token)}/scan`,
+    );
+    return response.data;
+  }
+}
+
+
+
+========== C:\Users\CROCK\Desktop\projet-costm\frontend\src\domain\entities\Presence.ts ==========
+
+export type PresenceStatut = 'PRESENT' | 'ABSENT' | 'RETARD' | 'EXCUSE';
+
+export interface Presence {
+  id: string;
+  date: string;
+  statut: PresenceStatut;
+  justification?: string | null;
+  etudiantId?: string;
+  etudiant?: {
+    id: string;
+    matricule?: string;
+    nom?: string;
+    prenom?: string;
+  } | null;
+}
+
+
+========== C:\Users\CROCK\Desktop\projet-costm\frontend\src\domain\entities\PresenceSession.ts ==========
+
+export interface PresenceSessionStudent {
+  id: string;
+  matricule: string;
+  nom: string;
+  prenom: string;
+}
+
+export interface PresenceSessionRecord {
+  id: string;
+  date: string;
+  statut: string;
+  etudiant?: PresenceSessionStudent;
+}
+
+export interface PresenceSession {
+  id: string;
+  cours: string;
+  token: string;
+  createdAt: string;
+  expiresAt: string;
+  closedAt: string | null;
+  presences?: PresenceSessionRecord[];
+}
+
+
+
+========== C:\Users\CROCK\Desktop\projet-costm\frontend\package.json ==========
+
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@zxing/browser": "^0.2.1",
+    "axios": "^1.20.0",
+    "jspdf": "^4.2.1",
+    "qrcode": "^1.5.4",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "oxlint": "^1.81.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0"
+  }
+}
+
+
+
+========== C:\Users\CROCK\Desktop\projet-costm\backend\src\modules\presence\presence.controller.ts ==========
+
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
+
+import { PresenceService } from './presence.service.js';
+import { CreatePresenceDto } from './dto/create-presence.dto.js';
+import { UpdatePresenceDto } from './dto/update-presence.dto.js';
+import { CreatePresenceSessionDto } from './dto/create-presence-session.dto.js';
+
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../auth/guards/roles.guard.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../user/domain/user.entity.js';
+
+@Controller('presences')
+export class PresenceController {
+  constructor(private readonly presenceService: PresenceService) {}
+
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  create(@Body() dto: CreatePresenceDto) {
+    return this.presenceService.create(dto);
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  findMyPresences(@Req() req: any) {
+    return this.presenceService.findMyPresences(req.user.sub);
+  }
+
+  // Routes QR : l'ordre évite de confondre "sessions" avec un identifiant de présence.
+  @Post('sessions')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  createSession(@Body() dto: CreatePresenceSessionDto, @Req() req: any) {
+    return this.presenceService.createSession(dto, req.user.sub);
+  }
+
+  @Get('sessions')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  listSessions() {
+    return this.presenceService.listSessions();
+  }
+
+  @Get('sessions/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  getSession(@Param('id') id: string) {
+    return this.presenceService.getSession(id);
+  }
+
+  @Patch('sessions/:id/close')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  closeSession(@Param('id') id: string) {
+    return this.presenceService.closeSession(id);
+  }
+
+  @Post('sessions/:token/scan')
+  @UseGuards(JwtAuthGuard)
+  scanSession(@Param('token') token: string, @Req() req: any) {
+    return this.presenceService.scanSession(token, req.user.sub);
+  }
+
+  @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  findAll() {
+    return this.presenceService.findAll();
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  findOne(@Param('id') id: string) {
+    return this.presenceService.findOne(id);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  update(@Param('id') id: string, @Body() dto: UpdatePresenceDto) {
+    return this.presenceService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  remove(@Param('id') id: string) {
+    return this.presenceService.remove(id);
+  }
+}
+
+
+
+========== C:\Users\CROCK\Desktop\projet-costm\backend\src\modules\presence\presence.service.ts ==========
+
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { randomUUID } from 'node:crypto';
+
+import { Presence, StatutPresence } from './presence.entity.js';
+import { PresenceSession } from './presence-session.entity.js';
+import { CreatePresenceDto } from './dto/create-presence.dto.js';
+import { UpdatePresenceDto } from './dto/update-presence.dto.js';
+import { CreatePresenceSessionDto } from './dto/create-presence-session.dto.js';
+import { Etudiant } from '../etudiant/domain/etudiant.entity.js';
+import { User, UserRole } from '../user/domain/user.entity.js';
+
+@Injectable()
+export class PresenceService {
+  constructor(
+    @InjectRepository(Presence)
+    private readonly presenceRepository: Repository<Presence>,
+    @InjectRepository(PresenceSession)
+    private readonly sessionRepository: Repository<PresenceSession>,
+    @InjectRepository(Etudiant)
+    private readonly etudiantRepository: Repository<Etudiant>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
+
+  // Présences manuelles existantes
+  async create(dto: CreatePresenceDto): Promise<Presence> {
+    const { etudiantId, ...presenceData } = dto;
+    const etudiant = await this.etudiantRepository.findOne({
+      where: { id: etudiantId },
+    });
+
+    if (!etudiant) {
+      throw new NotFoundException('Étudiant introuvable pour cette présence.');
+    }
+
+    const presence = this.presenceRepository.create({
+      ...presenceData,
+      justification: presenceData.justification?.trim() || null,
+      etudiant,
+      session: null,
+    });
+
+    return this.presenceRepository.save(presence);
+  }
+
+  async findAll(): Promise<Presence[]> {
+    return this.presenceRepository.find({
+      relations: { etudiant: true, session: true },
+      order: { date: 'DESC' },
+    });
+  }
+
+  async findOne(id: string): Promise<Presence> {
+    const presence = await this.presenceRepository.findOne({
+      where: { id },
+      relations: { etudiant: true, session: true },
+    });
+
+    if (!presence) {
+      throw new NotFoundException(`Présence avec l'ID ${id} non trouvée.`);
+    }
+
+    return presence;
+  }
+
+  async update(id: string, dto: UpdatePresenceDto): Promise<Presence> {
+    const presence = await this.findOne(id);
+
+    if (dto.etudiantId !== undefined) {
+      const etudiant = await this.etudiantRepository.findOne({
+        where: { id: dto.etudiantId },
+      });
+
+      if (!etudiant) {
+        throw new NotFoundException('Étudiant introuvable pour cette présence.');
+      }
+      presence.etudiant = etudiant;
+    }
+
+    if (dto.statut !== undefined) presence.statut = dto.statut;
+    if (dto.date !== undefined) presence.date = dto.date;
+    if (dto.justification !== undefined) {
+      presence.justification = dto.justification.trim() || null;
+    }
+
+    await this.presenceRepository.save(presence);
+    return this.findOne(id);
+  }
+
+  async remove(id: string): Promise<{ message: string }> {
+    const presence = await this.findOne(id);
+    await this.presenceRepository.remove(presence);
+    return { message: 'Présence supprimée avec succès.' };
+  }
+
+  async findMyPresences(userId: string): Promise<Presence[]> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: { etudiant: true },
+    });
+
+    if (!user) throw new NotFoundException('Utilisateur introuvable.');
+    if (!user.etudiant) {
+      throw new NotFoundException('Aucun étudiant associé à cet utilisateur.');
+    }
+
+    return this.presenceRepository.find({
+      where: { etudiant: { id: user.etudiant.id } },
+      relations: { etudiant: true, session: true },
+      order: { date: 'DESC' },
+    });
+  }
+
+  // Créer un QR utilisable pendant 5 minutes
+  async createSession(
+    dto: CreatePresenceSessionDto,
+    adminId: string,
+  ): Promise<PresenceSession> {
+    const cours = dto.cours.trim();
+    if (!cours) throw new BadRequestException('Le nom du cours est obligatoire.');
+
+    const session = this.sessionRepository.create({
+      cours,
+      token: randomUUID(),
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      closedAt: null,
+      createdBy: adminId,
+    });
+
+    return this.sessionRepository.save(session);
+  }
+
+  async listSessions(): Promise<PresenceSession[]> {
+    return this.sessionRepository.find({
+      relations: { presences: { etudiant: true } },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async getSession(id: string): Promise<PresenceSession> {
+    const session = await this.sessionRepository.findOne({
+      where: { id },
+      relations: { presences: { etudiant: true } },
+    });
+
+    if (!session) throw new NotFoundException('Session de pointage introuvable.');
+    return session;
+  }
+
+  async closeSession(id: string): Promise<PresenceSession> {
+    const session = await this.sessionRepository.findOne({ where: { id } });
+    if (!session) throw new NotFoundException('Session de pointage introuvable.');
+
+    if (!session.closedAt) {
+      session.closedAt = new Date();
+      await this.sessionRepository.save(session);
+    }
+
+    return this.getSession(id);
+  }
+
+  // Le compte connecté détermine l'étudiant : aucun etudiantId reçu du navigateur.
+  async scanSession(token: string, userId: string): Promise<Presence> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: { etudiant: true },
+    });
+
+    if (!user) throw new NotFoundException('Compte introuvable.');
+    if (user.role !== UserRole.ETUDIANT || !user.etudiant) {
+      throw new ForbiddenException('Le pointage QR est réservé aux comptes étudiants.');
+    }
+
+    const session = await this.sessionRepository.findOne({ where: { token } });
+    if (!session) throw new NotFoundException('QR code invalide ou inconnu.');
+    if (session.closedAt) {
+      throw new ConflictException('Cette session de pointage est fermée.');
+    }
+    if (Date.now() >= session.expiresAt.getTime()) {
+      throw new ConflictException('Ce QR code a expiré. Demandez un nouveau code à l’administration.');
+    }
+
+    const existing = await this.presenceRepository.findOne({
+      where: {
+        session: { id: session.id },
+        etudiant: { id: user.etudiant.id },
+      },
+      relations: { etudiant: true, session: true },
+    });
+
+    if (existing) {
+      throw new ConflictException('Votre présence est déjà enregistrée pour ce cours.');
+    }
+
+    const date = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Indian/Antananarivo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+
+    const presence = this.presenceRepository.create({
+      statut: StatutPresence.PRESENT,
+      date,
+      justification: null,
+      etudiant: user.etudiant,
+      session,
+    });
+
+    try {
+      return await this.presenceRepository.save(presence);
+    } catch {
+      // Protège aussi contre deux scans simultanés du même étudiant.
+      throw new ConflictException('Votre présence est déjà enregistrée pour ce cours.');
+    }
+  }
+}
+
+
+
+========== C:\Users\CROCK\Desktop\projet-costm\backend\src\modules\presence\presence.entity.ts ==========
+
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  Index,
+} from 'typeorm';
+
+import { Etudiant } from '../etudiant/domain/etudiant.entity.js';
+import { PresenceSession } from './presence-session.entity.js';
+
+export enum StatutPresence {
+  PRESENT = 'PRESENT',
+  ABSENT = 'ABSENT',
+  RETARD = 'RETARD',
+  EXCUSE = 'EXCUSE',
+}
+
+@Entity('presences')
+@Index(['session', 'etudiant'], { unique: true })
+export class Presence {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({
+    type: 'enum',
+    enum: StatutPresence,
+    default: StatutPresence.PRESENT,
+  })
+  statut: StatutPresence;
+
+  @Column({ type: 'date' })
+  date: string;
+
+  @Column({ type: 'text', nullable: true })
+  justification: string | null;
+
+  @ManyToOne(
+    () => Etudiant,
+    (etudiant) => etudiant.presences,
+    { onDelete: 'CASCADE' },
+  )
+  etudiant: Etudiant;
+
+  @ManyToOne(
+    () => PresenceSession,
+    (session) => session.presences,
+    { nullable: true, onDelete: 'SET NULL' },
+  )
+  session: PresenceSession | null;
+}
+
+
+
+
+========== C:\Users\CROCK\Desktop\projet-costm\backend\src\modules\presence\presence-session.entity.ts ==========
+
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  OneToMany,
+} from 'typeorm';
+import { Presence } from './presence.entity.js';
+
+@Entity('presence_sessions')
+export class PresenceSession {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ length: 120 })
+  cours: string;
+
+  @Column({ type: 'uuid', unique: true })
+  token: string;
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  createdAt: Date;
+
+  @Column({ type: 'timestamptz' })
+  expiresAt: Date;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  closedAt: Date | null;
+
+  @Column({ type: 'uuid' })
+  createdBy: string;
+
+  @OneToMany(() => Presence, (presence) => presence.session)
+  presences: Presence[];
+}
+

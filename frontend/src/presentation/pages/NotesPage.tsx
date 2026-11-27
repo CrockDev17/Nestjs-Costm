@@ -6,12 +6,14 @@ import {
   createNoteUseCase,
   listNotesUseCase,
   etudiantRepository,
+  listProgrammesUseCase,
   updateNoteUseCase,
   deleteNoteUseCase,
 } from '../di/containers';
 
 import type { Note } from '../../domain/entities/Note';
 import type { Etudiant } from '../../domain/entities/Etudiant';
+import type { Programme } from '../../domain/entities/Programme';
 
 type NoteForm = {
   valeur: string;
@@ -51,6 +53,7 @@ function getErrorMessage(error: unknown): string {
 export default function NotesPage() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [etudiants, setEtudiants] = useState<Etudiant[]>([]);
+  const [programmes, setProgrammes] = useState<Programme[]>([]);
   const [form, setForm] = useState<NoteForm>(initialForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -66,13 +69,15 @@ export default function NotesPage() {
     setError('');
 
     try {
-      const [notesData, etudiantsData] = await Promise.all([
+      const [notesData, etudiantsData, programmesData] = await Promise.all([
         listNotesUseCase.execute(),
         etudiantRepository.list(),
+        listProgrammesUseCase.execute(),
       ]);
 
       setNotes(notesData);
       setEtudiants(etudiantsData);
+      setProgrammes(programmesData);
     } catch (err: unknown) {
       setError(getErrorMessage(err));
     } finally {
@@ -278,16 +283,24 @@ export default function NotesPage() {
         </div>
 
         <div>
-          <label htmlFor="matiere">Matière *</label>
-          <input
+          <label htmlFor="matiere">Programme *</label>
+          <select
             id="matiere"
             name="matiere"
             value={form.matiere}
             onChange={handleChange}
-            maxLength={150}
             required
-            placeholder="Ex. Réseaux informatiques"
-          />
+          >
+            <option value="">Sélectionner un programme</option>
+            {form.matiere && !programmes.some((programme) => programme.nom === form.matiere) && (
+              <option value={form.matiere}>{form.matiere}</option>
+            )}
+            {programmes.map((programme) => (
+              <option key={programme.id} value={programme.nom}>
+                {programme.nom}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
@@ -306,7 +319,7 @@ export default function NotesPage() {
         </div>
 
         <div>
-          <label htmlFor="semestre">Semestre</label>
+          <label htmlFor="semestre">Année</label>
           <input
             id="semestre"
             name="semestre"
@@ -404,7 +417,7 @@ export default function NotesPage() {
               <tr>
                 <th>Étudiant</th>
                 <th>Matière</th>
-                <th>Semestre</th>
+                <th>Année</th>
                 <th>Note / 20</th>
                 <th>Actions</th>
               </tr>

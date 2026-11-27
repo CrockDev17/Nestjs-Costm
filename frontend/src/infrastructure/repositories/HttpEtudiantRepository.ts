@@ -1,4 +1,4 @@
-﻿import { apiClient } from '../http/apiClient';
+import { apiClient } from '../http/apiClient';
 import type { Etudiant } from '../../domain/entities/Etudiant';
 import type { EtudiantRepository } from '../../domain/repositories/EtudiantRepository';
 
@@ -18,6 +18,7 @@ export class HttpEtudiantRepository implements EtudiantRepository {
     nom: string;
     prenom: string;
     email: string;
+    programmeId: string;
   }): Promise<Etudiant> {
     const { data } = await apiClient.post<Etudiant>('/etudiants', etudiant);
     return data;
@@ -30,6 +31,7 @@ export class HttpEtudiantRepository implements EtudiantRepository {
       nom: string;
       prenom: string;
       email: string;
+      programmeId: string;
     }>
   ): Promise<Etudiant> {
     const { data } = await apiClient.patch<Etudiant>(

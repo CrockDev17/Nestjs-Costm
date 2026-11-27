@@ -10,6 +10,7 @@ import { Presence } from '../../presence/presence.entity.js';
 import { Programme } from '../../programme/domain/programme.entity.js';
 import { Note } from '../../note/domain/note.entity.js';
 import { Paiement } from '../../paiement/domain/paiement.entity.js';
+import { Diplome } from '../../diplome/domain/diplome.entity.js';
 
 @Entity('etudiants')
 export class Etudiant {
@@ -55,4 +56,10 @@ notes: Note[];
   (paiement) => paiement.etudiant,
 )
 paiements: Paiement[];
+
+@OneToMany(
+  () => Diplome,
+  (diplome) => diplome.etudiant,
+)
+diplomes: Diplome[];
 }

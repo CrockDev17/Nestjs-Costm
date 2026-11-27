@@ -1,0 +1,983 @@
+﻿DIAGNOSTIC SCANNER QR ETUDIANT - 10/22/2026 09:58:44
+
+========== C:\Users\CROCK\Desktop\projet-costm\frontend\src\App.tsx ==========
+
+import './presentation/student-portal-contrast-fix.css';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import Layout from './presentation/components/Layout';
+import ProtectedRoute from './presentation/components/ProtectedRoute';
+import { TokenStorage } from './infrastructure/auth/TokenStorage';
+import LoginPage from './presentation/pages/LoginPage';
+import DashboardPage from './presentation/pages/DashboardPage';
+import EtudiantsPage from './presentation/pages/EtudiantsPage';
+import ProgrammesPage from './presentation/pages/ProgrammesPage';
+import NotesPage from './presentation/pages/NotesPage';
+import DiplomesPage from './presentation/pages/DiplomesPage';
+import VerifyDiplomePage from './presentation/pages/VerifyDiplomePage';
+import PresencesPage from './presentation/pages/PresencesPage';
+import PaiementsPage from './presentation/pages/PaiementsPage';
+import AnnoncesPage from './presentation/pages/AnnoncesPage';
+import PointageQrAdminPage from './presentation/pages/PointageQrAdminPage';
+import PointageQrStudentPage from './presentation/pages/PointageQrStudentPage';
+import {
+  StudentAnnouncementsPage,
+  StudentSpecificPage,
+  StudentCoursesPage,
+  StudentPresencePage,
+  StudentProfilePage,
+} from './presentation/pages/StudentPortalPages';
+import './presentation/styles/student-portal.css';
+
+function getRole(): string {
+  try {
+    const token = TokenStorage.get();
+    if (!token) return '';
+    const payload = token.split('.')[1];
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = JSON.parse(atob(normalized));
+    return decoded.role ?? decoded.roles?.[0] ?? '';
+  } catch {
+    return '';
+  }
+}
+
+function DashboardForRole() {
+  return getRole() === 'ETUDIANT'
+    ? <Navigate to="/etudiant/annonces" replace />
+    : <DashboardPage />;
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/pointage/:token" element={<PointageQrStudentPage />} />
+        <Route path="/verify" element={<VerifyDiplomePage />} />
+        <Route path="/verify/:reference" element={<VerifyDiplomePage />} />
+
+        <Route element={<ProtectedRoute />}>
+          <Route element={<Layout />}>
+            <Route element={<ProtectedRoute roles={['ADMIN', 'ETUDIANT']} />}>
+              <Route path="/dashboard" element={<DashboardForRole />} />
+            </Route>
+
+            <Route element={<ProtectedRoute roles={['ETUDIANT']} />}>
+              <Route path="/etudiant/annonces" element={<StudentAnnouncementsPage />} />
+              <Route path="/etudiant/annonces-specifiques" element={<StudentSpecificPage />} />
+              <Route path="/etudiant/cours" element={<StudentCoursesPage />} />
+              <Route path="/etudiant/presence" element={<StudentPresencePage />} />
+              <Route path="/etudiant/profil" element={<StudentProfilePage />} />
+            </Route>
+
+            <Route element={<ProtectedRoute roles={['ADMIN']} />}>
+              <Route path="/admin/etudiants" element={<EtudiantsPage />} />
+              <Route path="/admin/programmes" element={<ProgrammesPage />} />
+              <Route path="/admin/annonces" element={<AnnoncesPage />} />
+              <Route path="/admin/notes" element={<NotesPage />} />
+              <Route path="/admin/presences" element={<PresencesPage />} />
+              <Route path="/admin/pointage-qr" element={<PointageQrAdminPage />} />
+              <Route path="/admin/paiements" element={<PaiementsPage />} />
+              <Route path="/admin/diplomes" element={<DiplomesPage />} />
+            </Route>
+          </Route>
+        </Route>
+
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+========== C:\Users\CROCK\Desktop\projet-costm\frontend\src\presentation\pages\StudentDashboardPage.tsx ==========
+
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { apiClient } from '../../infrastructure/http/apiClient';
+
+interface Etudiant {
+  id: string;
+  matricule: string;
+  nom: string;
+  prenom: string;
+  email: string;
+  programme?: { nom?: string } | null;
+}
+
+type RecordItem = Record<string, unknown>;
+
+interface PersonalData {
+  etudiant: Etudiant | null;
+  notes: RecordItem[];
+  paiements: RecordItem[];
+  presences: RecordItem[];
+  diplomes: RecordItem[];
+}
+
+type ApiResult = PromiseSettledResult<{ data: unknown }>;
+
+const emptyData: PersonalData = {
+  etudiant: null,
+  notes: [],
+  paiements: [],
+  presences: [],
+  diplomes: [],
+};
+
+function displayValue(value: unknown): string {
+  if (value === null || value === undefined || value === '') return '—';
+  if (typeof value === 'object') return '—';
+  return String(value);
+}
+
+function formatDate(value: unknown): string {
+  if (typeof value !== 'string' || !value) return '—';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleDateString('fr-FR');
+}
+
+function asArray(result: ApiResult): RecordItem[] {
+  if (result.status !== 'fulfilled' || !Array.isArray(result.value.data)) {
+    return [];
+  }
+
+  return result.value.data.filter(
+    (item): item is RecordItem => typeof item === 'object' && item !== null,
+  );
+}
+
+export default function StudentDashboardPage() {
+  const [data, setData] = useState<PersonalData>(emptyData);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadPersonalData() {
+      setLoading(true);
+      setError('');
+
+      const requests = await Promise.allSettled([
+        apiClient.get('/etudiants/me'),
+        apiClient.get('/notes/me'),
+        apiClient.get('/paiements/me'),
+        apiClient.get('/presences/me'),
+        apiClient.get('/diplomes/me'),
+      ]);
+
+      if (cancelled) return;
+
+      const [studentResult, notesResult, paymentsResult, presencesResult, diplomasResult] =
+        requests as ApiResult[];
+
+      if (studentResult.status !== 'fulfilled' || !studentResult.value.data) {
+        setError(
+          "Impossible de charger votre dossier étudiant. Vérifiez que votre compte est associé à un dossier COSTM.",
+        );
+        setLoading(false);
+        return;
+      }
+
+      setData({
+        etudiant: studentResult.value.data as Etudiant,
+        notes: asArray(notesResult),
+        paiements: asArray(paymentsResult),
+        presences: asArray(presencesResult),
+        diplomes: asArray(diplomasResult),
+      });
+
+      setLoading(false);
+    }
+
+    void loadPersonalData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="page-container student-page">
+        <p className="portal-eyebrow">PORTAIL ÉTUDIANT · COSTM</p>
+        <h1>Mon espace étudiant</h1>
+        <p>Chargement de votre dossier personnel…</p>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="page-container student-page">
+        <p className="portal-eyebrow">PORTAIL ÉTUDIANT · COSTM</p>
+        <h1>Mon espace étudiant</h1>
+        <div className="error-message" role="alert">{error}</div>
+        <button type="button" onClick={() => window.location.reload()}>
+          Réessayer
+        </button>
+      </section>
+    );
+  }
+
+  const student = data.etudiant;
+
+  const sections = [
+    { title: 'Mes notes', count: data.notes.length, icon: '✎' },
+    { title: 'Mes paiements', count: data.paiements.length, icon: '¤' },
+    { title: 'Mes présences', count: data.presences.length, icon: '◷' },
+    { title: 'Mes diplômes', count: data.diplomes.length, icon: '◇' },
+  ];
+
+  return (
+    <section className="page-container student-page">
+      <div className="student-welcome">
+        <p className="portal-eyebrow">PORTAIL ÉTUDIANT · COSTM</p>
+        <h1>Bonjour{student?.prenom ? `, ${student.prenom}` : ''} !</h1>
+        <p>Retrouvez ici les informations liées à votre dossier scolaire personnel.</p>
+      </div>
+
+      <section className="dashboard-card student-profile">
+        <h2>Mon profil</h2>
+        <div className="student-profile-grid">
+          <div>
+            <span>Nom complet</span>
+            <strong>{[student?.prenom, student?.nom].filter(Boolean).join(' ') || '—'}</strong>
+          </div>
+          <div>
+            <span>Matricule</span>
+            <strong>{student?.matricule || '—'}</strong>
+          </div>
+          <div>
+            <span>Adresse e-mail</span>
+            <strong>{student?.email || '—'}</strong>
+          </div>
+          <div>
+            <span>Programme</span>
+            <strong>{student?.programme?.nom || 'Non renseigné'}</strong>
+          </div>
+        </div>
+      </section>
+
+      <div className="dashboard-grid student-summary-grid">
+        {sections.map((section) => (
+          <article className="dashboard-card student-stat-card" key={section.title}>
+            <span className="student-stat-icon" aria-hidden="true">{section.icon}</span>
+            <h2>{section.title}</h2>
+            <p className="student-stat">{section.count}</p>
+            <p>Enregistrement(s) dans votre dossier.</p>
+          </article>
+        ))}
+      </div>
+
+      <section className="dashboard-card student-records">
+        <h2>Mes dernières notes</h2>
+        {data.notes.length === 0 ? (
+          <p>Aucune note disponible pour le moment.</p>
+        ) : (
+          <div className="student-record-list">
+            {data.notes.slice(0, 5).map((note, index) => (
+              <div className="student-record" key={String(note.id ?? index)}>
+                <strong>{displayValue(note.matiere ?? note.nom)}</strong>
+                <span>
+                  Note : {displayValue(note.valeur ?? note.note)}
+                  {note.semestre ? ` · ${displayValue(note.semestre)}` : ''}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="dashboard-card student-records">
+        <h2>Mes paiements</h2>
+        {data.paiements.length === 0 ? (
+          <p>Aucun paiement enregistré dans votre dossier.</p>
+        ) : (
+          <div className="student-record-list">
+            {data.paiements.slice(0, 5).map((payment, index) => (
+              <div className="student-record" key={String(payment.id ?? index)}>
+                <strong>{displayValue(payment.motif ?? payment.description ?? 'Paiement')}</strong>
+                <span>
+                  Montant : {displayValue(payment.montant)}
+                  {' · '}Statut : {displayValue(payment.statut)}
+                  {' · '}{formatDate(payment.date ?? payment.createdAt)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="dashboard-card student-records">
+        <h2>Mes présences récentes</h2>
+        {data.presences.length === 0 ? (
+          <p>Aucune présence enregistrée pour le moment.</p>
+        ) : (
+          <div className="student-record-list">
+            {data.presences.slice(0, 5).map((presence, index) => (
+              <div className="student-record" key={String(presence.id ?? index)}>
+                <strong>{displayValue(presence.statut)}</strong>
+                <span>
+                  {formatDate(presence.date)}
+                  {presence.justification ? ` · ${displayValue(presence.justification)}` : ''}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="dashboard-card student-records">
+        <h2>Mes diplômes</h2>
+        {data.diplomes.length === 0 ? (
+          <p>Aucun diplôme enregistré dans votre dossier pour le moment.</p>
+        ) : (
+          <div className="student-record-list">
+            {data.diplomes.map((diploma, index) => (
+              <div className="student-record" key={String(diploma.id ?? index)}>
+                <strong>{displayValue(diploma.intitule ?? diploma.nom ?? 'Diplôme')}</strong>
+                <span>Référence : {displayValue(diploma.reference)}</span>
+                {typeof diploma.reference === 'string' && diploma.reference && (
+                  <Link to={`/verify/${encodeURIComponent(diploma.reference)}`}>
+                    Vérifier ce diplôme
+                  </Link>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </section>
+  );
+}
+
+
+========== C:\Users\CROCK\Desktop\projet-costm\frontend\src\presentation\pages\StudentPortalPages.tsx ==========
+
+import { useEffect, useRef, useState } from 'react';
+import { BrowserQRCodeReader } from '@zxing/browser';
+import { Link } from 'react-router-dom';
+import { apiClient } from '../../infrastructure/http/apiClient';
+import { scanPresenceSessionUseCase } from '../di/containers';
+
+type Item = Record<string, unknown>;
+
+interface Student {
+  id?: string;
+  nom?: string;
+  prenom?: string;
+  matricule?: string;
+  email?: string;
+  programme?: { id?: string; nom?: string; code?: string; niveau?: string } | null;
+}
+
+function asItems(value: unknown): Item[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is Item => typeof item === 'object' && item !== null);
+}
+
+function text(value: unknown): string {
+  if (value === null || value === undefined || value === '') return '—';
+  if (typeof value === 'object') return '—';
+  return String(value);
+}
+
+function dateText(value: unknown): string {
+  if (typeof value !== 'string' || !value) return '';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString('fr-FR');
+}
+
+function PageTitle({ eyebrow, title, description }: {
+  eyebrow: string; title: string; description: string;
+}) {
+  return (
+    <div className="portal-heading">
+      <p className="portal-eyebrow">{eyebrow}</p>
+      <h1>{title}</h1>
+      <p>{description}</p>
+    </div>
+  );
+}
+
+function Notice({ children, error = false }: { children: React.ReactNode; error?: boolean }) {
+  return <div className={error ? 'portal-notice portal-error' : 'portal-notice'} role={error ? 'alert' : 'status'}>{children}</div>;
+}
+
+function useStudent() {
+  const [student, setStudent] = useState<Student | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    apiClient.get('/etudiants/me')
+      .then((response) => {
+        if (active) setStudent(response.data as Student);
+      })
+      .catch(() => {
+        if (active) setError('Impossible de charger votre dossier étudiant. Vérifiez votre connexion.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
+
+  return { student, loading, error };
+}
+
+export function StudentAnnouncementsPage() {
+  const [annonces, setAnnonces] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    apiClient.get('/annonces/publiees')
+      .then((response) => {
+        if (active) setAnnonces(asItems(response.data));
+      })
+      .catch(() => {
+        if (active) setError('Les annonces ne peuvent pas être chargées. Vérifiez que le backend est à jour et redémarré.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
+
+  return (
+    <section className="portal-page">
+      <PageTitle eyebrow="PORTAIL ÉTUDIANT · COSTM" title="Annonces" description="Les actualités, informations et événements publiés par COSTM." />
+      <div className="portal-hero">
+        <div>
+          <span className="portal-hero-label">VOTRE ESPACE ÉTUDIANT</span>
+          <h2>Restez informé.</h2>
+          <p>Consultez ici les communications officielles de l’établissement.</p>
+        </div>
+        <div className="portal-hero-mark" aria-hidden="true">C</div>
+      </div>
+
+      {error && <Notice error>{error}</Notice>}
+      {loading && <p>Chargement des annonces…</p>}
+      {!loading && !error && annonces.length === 0 && (
+        <div className="portal-empty"><h2>Aucune annonce publiée</h2><p>Les nouvelles annonces apparaîtront ici dès leur publication par l’administration.</p></div>
+      )}
+
+      <div className="portal-announcements">
+        {annonces.map((annonce, index) => (
+          <article className="portal-card portal-announcement" key={String(annonce.id ?? index)}>
+            <div className="portal-card-top">
+              <span className="portal-tag">{text(annonce.type)}</span>
+              <span className="portal-muted">{dateText(annonce.datePublication)}</span>
+            </div>
+            <h2>{text(annonce.titre)}</h2>
+            <p className="portal-body">{text(annonce.contenu)}</p>
+            {(Boolean(annonce.dateEvenement) || Boolean(annonce.lieu)) && (
+              <div className="portal-meta">
+                {Boolean(annonce.dateEvenement) && <span>◷ {dateText(annonce.dateEvenement)}</span>}
+                {Boolean(annonce.lieu) && <span>⌖ {text(annonce.lieu)}</span>}
+              </div>
+            )}
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function StudentSpecificPage() {
+  const [notes, setNotes] = useState<Item[]>([]);
+  const [annonces, setAnnonces] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    Promise.allSettled([
+      apiClient.get('/notes/me'),
+      apiClient.get('/annonces/publiees'),
+    ]).then(([notesResult, annoncesResult]) => {
+      if (!active) return;
+      if (notesResult.status === 'fulfilled') setNotes(asItems(notesResult.value.data));
+      if (annoncesResult.status === 'fulfilled') {
+        setAnnonces(asItems(annoncesResult.value.data).filter((a) => a.type === 'EXAMEN'));
+      }
+      if (notesResult.status === 'rejected' && annoncesResult.status === 'rejected') {
+        setError('Impossible de charger les résultats. Réessayez lorsque le serveur est disponible.');
+      }
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
+  }, []);
+
+  return (
+    <section className="portal-page">
+      <PageTitle eyebrow="RÉSULTATS · INFORMATIONS CIBLÉES" title="Annonces spécifiques" description="Vos notes personnelles et les annonces publiées concernant les examens." />
+      {error && <Notice error>{error}</Notice>}
+      {loading ? <p>Chargement des résultats…</p> : (
+        <>
+          <section className="portal-section">
+            <h2>Mes notes</h2>
+            <p className="portal-section-intro">Ces données proviennent de votre dossier personnel.</p>
+            {notes.length === 0 ? <div className="portal-empty">Aucune note disponible pour le moment.</div> : (
+              <div className="portal-table-wrap">
+                <table className="portal-table">
+                  <thead><tr><th>Matière</th><th>Note</th><th>Semestre</th></tr></thead>
+                  <tbody>{notes.map((note, index) => (
+                    <tr key={String(note.id ?? index)}>
+                      <td>{text(note.matiere ?? note.nom)}</td>
+                      <td><strong>{text(note.valeur ?? note.note)}</strong></td>
+                      <td>{text(note.semestre)}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          <section className="portal-section">
+            <h2>Annonces d’examens</h2>
+            {annonces.length === 0 ? <div className="portal-empty">Aucune annonce d’examen publiée pour le moment.</div> : (
+              <div className="portal-announcements">
+                {annonces.map((annonce, index) => (
+                  <article className="portal-card" key={String(annonce.id ?? index)}>
+                    <h3>{text(annonce.titre)}</h3>
+                    <p className="portal-body">{text(annonce.contenu)}</p>
+                    <span className="portal-muted">{dateText(annonce.dateEvenement ?? annonce.datePublication)}</span>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+          <p className="portal-muted">Le classement général n’est pas affiché tant qu’un classement officiel n’est pas fourni par le système. Aucune position n’est inventée.</p>
+        </>
+      )}
+    </section>
+  );
+}
+
+export function StudentCoursesPage() {
+  const { student, loading: studentLoading, error: studentError } = useStudent();
+  const [programmes, setProgrammes] = useState<Item[]>([]);
+  const [loadingPrograms, setLoadingPrograms] = useState(true);
+  const [programError, setProgramError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    apiClient.get('/programmes')
+      .then((response) => {
+        if (active) setProgrammes(asItems(response.data));
+      })
+      .catch(() => {
+        if (active) setProgramError('Impossible de charger le catalogue. Vérifiez que le backend autorise la consultation des programmes par les étudiants.');
+      })
+      .finally(() => {
+        if (active) setLoadingPrograms(false);
+      });
+    return () => { active = false; };
+  }, []);
+
+  return (
+    <section className="portal-page">
+      <PageTitle eyebrow="FORMATION · COSTM" title="Cours et programmes" description="Découvrez les programmes proposés par COSTM et retrouvez votre formation actuelle." />
+      <section className="portal-current-program">
+        <span className="portal-tag">MA FORMATION</span>
+        {studentLoading ? <p>Chargement du profil…</p> : studentError ? <Notice error>{studentError}</Notice> : (
+          <>
+            <h2>{student?.programme?.nom ?? 'Aucun programme associé'}</h2>
+            <p>{student?.programme?.code ? `Code : ${student.programme.code}` : 'Le programme associé à votre dossier apparaîtra ici.'}</p>
+            {student?.programme?.niveau && <span className="portal-muted">Niveau : {student.programme.niveau}</span>}
+          </>
+        )}
+      </section>
+
+      <section className="portal-section">
+        <h2>Programmes disponibles chez COSTM</h2>
+        {programError && <Notice error>{programError}</Notice>}
+        {loadingPrograms ? <p>Chargement du catalogue…</p> : programmes.length === 0 ? (
+          <div className="portal-empty">Aucun programme disponible à afficher.</div>
+        ) : (
+          <div className="portal-program-grid">
+            {programmes.map((programme, index) => (
+              <article className="portal-card portal-program-card" key={String(programme.id ?? index)}>
+                <span className="portal-program-icon" aria-hidden="true">▣</span>
+                <h3>{text(programme.nom)}</h3>
+                {Boolean(programme.code) && <span className="portal-tag">{text(programme.code)}</span>}
+                {Boolean(programme.niveau) && <p className="portal-muted">Niveau : {text(programme.niveau)}</p>}
+                <p className="portal-body">{text(programme.description)}</p>
+                {String(programme.id ?? '') === String(student?.programme?.id ?? '') && <span className="portal-current-badge">Votre programme</span>}
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+    </section>
+  );
+}
+
+function extractToken(rawValue: string): string | null {
+  const raw = rawValue.trim();
+  try {
+    const url = new URL(raw);
+    const match = url.pathname.match(/\/pointage\/([^/]+)/);
+    if (match?.[1]) return decodeURIComponent(match[1]);
+  } catch {
+    // Le QR peut aussi contenir directement le token.
+  }
+  if (/^[a-zA-Z0-9_-]{12,}$/.test(raw)) return raw;
+  return null;
+}
+
+export function StudentPresencePage() {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const frameRef = useRef<number | null>(null);
+  const readerRef = useRef<BrowserQRCodeReader | null>(null);
+  const controlsRef = useRef<{ stop: () => void } | null>(null);
+  const runningRef = useRef(false);
+  const [scanning, setScanning] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  function stopCamera() {
+    runningRef.current = false;
+    if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+    frameRef.current = null;
+    controlsRef.current?.stop();
+    controlsRef.current = null;
+
+    const video = videoRef.current;
+    const stream = video?.srcObject as MediaStream | null;
+    stream?.getTracks().forEach((track) => track.stop());
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    if (video) video.srcObject = null;
+    setScanning(false);
+  }
+
+  async function submitScannedValue(rawValue: string) {
+    if (busy) return;
+    const token = extractToken(rawValue);
+    if (!token) {
+      setError('Ce QR code ne correspond pas à une session de pointage COSTM.');
+      return;
+    }
+
+    setBusy(true);
+    setError('');
+    setMessage('');
+    stopCamera();
+
+    try {
+      await scanPresenceSessionUseCase.execute(token);
+      setMessage('Présence enregistrée avec succès. Votre pointage est transmis à COSTM.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Pointage impossible. Le QR code a peut-être expiré ou a déjà été utilisé.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function startCamera() {
+    setError('');
+    setMessage('');
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError('La caméra nécessite HTTPS ou localhost et une autorisation du navigateur.');
+      return;
+    }
+
+    if (!videoRef.current) {
+      setError('La zone de caméra est introuvable. Rechargez la page et réessayez.');
+      return;
+    }
+
+    try {
+      stopCamera();
+
+      const reader = new BrowserQRCodeReader();
+      readerRef.current = reader;
+      runningRef.current = true;
+      setScanning(true);
+
+      const controls = await reader.decodeFromVideoDevice(
+        undefined,
+        videoRef.current,
+        (result, _scanError, scanControls) => {
+          if (result && runningRef.current) {
+            runningRef.current = false;
+            scanControls.stop();
+            void submitScannedValue(result.getText());
+          }
+        }
+      );
+
+      controlsRef.current = controls;
+
+      if (!runningRef.current) {
+        controls.stop();
+      }
+    } catch (e) {
+      stopCamera();
+      setError(
+        e instanceof Error
+          ? e.message
+          : 'Impossible de démarrer la caméra. Vérifiez les autorisations du navigateur.'
+      );
+    }
+  }
+
+  useEffect(() => () => {
+    runningRef.current = false;
+    controlsRef.current?.stop();
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+  }, []);
+
+  return (
+    <section className="portal-page">
+      <PageTitle eyebrow="POINTAGE · COSTM" title="Présence" description="Scannez le QR code présenté par l’administration pour enregistrer votre présence au cours." />
+      <section className="portal-scan-card">
+        <div className="portal-scan-icon">▦</div>
+        <h2>Scanner le QR code du cours</h2>
+        <p>Le QR doit être actif. Les sessions de pointage expirent après cinq minutes.</p>
+        <video ref={videoRef} className={scanning ? 'portal-camera portal-camera-active' : 'portal-camera'} playsInline muted />
+        {!scanning && !busy && (
+          <button className="portal-primary-button" type="button" onClick={() => void startCamera()}>
+            Ouvrir la caméra
+          </button>
+        )}
+        {scanning && <button className="portal-secondary-button" type="button" onClick={stopCamera}>Arrêter la caméra</button>}
+        {busy && <p>Enregistrement de votre présence…</p>}
+        {message && <Notice>{message}</Notice>}
+        {error && <Notice error>{error}</Notice>}
+        <p className="portal-muted">Autorisez l’accès à la caméra lorsque le navigateur le demande.</p>
+      </section>
+    </section>
+  );
+}
+
+export function StudentProfilePage() {
+  const { student, loading, error } = useStudent();
+
+  return (
+    <section className="portal-page">
+      <PageTitle eyebrow="MON COMPTE · COSTM" title="Mon profil" description="Consultez les informations liées à votre dossier étudiant." />
+      {loading && <p>Chargement du profil…</p>}
+      {error && <Notice error>{error}</Notice>}
+      {!loading && student && (
+        <section className="portal-profile-card">
+          <div className="portal-avatar">{(student.prenom?.[0] ?? 'E').toUpperCase()}</div>
+          <h2>{[student.prenom, student.nom].filter(Boolean).join(' ') || 'Étudiant COSTM'}</h2>
+          <span className="portal-tag">ÉTUDIANT</span>
+          <div className="portal-profile-grid">
+            <div><span>Matricule</span><strong>{text(student.matricule)}</strong></div>
+            <div><span>Adresse e-mail</span><strong>{text(student.email)}</strong></div>
+            <div><span>Programme</span><strong>{text(student.programme?.nom)}</strong></div>
+          </div>
+          <p className="portal-muted">Pour corriger vos informations personnelles, veuillez contacter l’administration.</p>
+          <Link className="portal-secondary-link" to="/etudiant/annonces">Retour aux annonces</Link>
+        </section>
+      )}
+    </section>
+  );
+}
+
+========== C:\Users\CROCK\Desktop\projet-costm\frontend\src\presentation\pages\PointageQrStudentPage.tsx ==========
+
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { scanPresenceSessionUseCase } from '../di/containers';
+
+export default function PointageQrStudentPage() {
+  const { token } = useParams<{ token: string }>();
+  const navigate = useNavigate();
+  const [status, setStatus] = useState('Vérification de la session...');
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function scan() {
+      if (!token) {
+        setStatus('Le lien du QR code est invalide.');
+        return;
+      }
+
+      const accessToken = localStorage.getItem('costm_access_token');
+
+      if (!accessToken) {
+        navigate('/login', {
+          replace: true,
+          state: { from: `/pointage/${token}` },
+        });
+        return;
+      }
+
+      try {
+        await scanPresenceSessionUseCase.execute(token);
+        if (!cancelled) {
+          setSuccess(true);
+          setStatus('Présence enregistrée avec succès.');
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setSuccess(false);
+          setStatus(e instanceof Error ? e.message : 'Le pointage a échoué. Le QR code a peut-être expiré ou a déjà été utilisé.');
+        }
+      }
+    }
+
+    void scan();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, navigate]);
+
+  return (
+    <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: '#f1f5f9', color: '#172033' }}>
+      <section style={{ width: '100%', maxWidth: 480, padding: 28, background: 'white', borderRadius: 16, boxShadow: '0 10px 30px rgba(15,23,42,0.08)', textAlign: 'center' }}>
+        <h1 style={{ marginTop: 0 }}>Pointage COSTM</h1>
+        <p style={{ fontSize: 17, lineHeight: 1.6 }}>{status}</p>
+        {success && <p style={{ color: '#15803d', fontWeight: 700 }}>Tu peux maintenant retourner à tes activités.</p>}
+        {!success && !status.includes('Vérification') && (
+          <button type="button" onClick={() => navigate('/login')} style={{ padding: '10px 16px', border: 0, borderRadius: 8, background: '#1d4ed8', color: 'white', cursor: 'pointer' }}>
+            Retour à la connexion
+          </button>
+        )}
+      </section>
+    </main>
+  );
+}
+
+
+========== C:\Users\CROCK\Desktop\projet-costm\frontend\src\presentation\di\containers.ts ==========
+
+import { LoginUseCase } from '../../application/auth/LoginUseCase';
+import { ListEtudiantsUseCase } from '../../application/etudiants/ListEtudiantsUseCase';
+import { ListProgrammesUseCase } from '../../application/programmes/ListProgrammesUseCase';
+
+import { HttpAuthRepository } from '../../infrastructure/repositories/HttpAuthRepository';
+import { HttpEtudiantRepository } from '../../infrastructure/repositories/HttpEtudiantRepository';
+import { HttpProgrammeRepository } from '../../infrastructure/repositories/HttpProgrammeRepository';
+import { HttpDiplomeRepository } from '../../infrastructure/repositories/HttpDiplomeRepository';
+
+import { ListNotesUseCase } from '../../application/notes/ListNotesUseCase';
+import { CreateNoteUseCase } from '../../application/notes/CreateNoteUseCase';
+import { HttpNoteRepository } from '../../infrastructure/repositories/HttpNoteRepository';
+
+import { ListPresencesUseCase } from '../../application/presences/ListPresencesUseCase';
+import { CreatePresenceUseCase } from '../../application/presences/CreatePresenceUseCase';
+import { UpdatePresenceUseCase } from '../../application/presences/UpdatePresenceUseCase';
+import { DeletePresenceUseCase } from '../../application/presences/DeletePresenceUseCase';
+import { HttpPresenceRepository } from '../../infrastructure/repositories/HttpPresenceRepository';
+
+import { ListPaiementsUseCase } from '../../application/paiements/ListPaiementsUseCase';
+import { CreatePaiementUseCase } from '../../application/paiements/CreatePaiementUseCase';
+import { HttpPaiementRepository } from '../../infrastructure/repositories/HttpPaiementRepository';
+
+import { UpdateNoteUseCase } from '../../application/notes/UpdateNoteUseCase';
+import { DeleteNoteUseCase } from '../../application/notes/DeleteNoteUseCase';
+import { ListAnnoncesUseCase } from '../../application/annonces/ListAnnoncesUseCase';
+import { CreateAnnonceUseCase } from '../../application/annonces/CreateAnnonceUseCase';
+import { UpdateAnnonceUseCase } from '../../application/annonces/UpdateAnnonceUseCase';
+import { DeleteAnnonceUseCase } from '../../application/annonces/DeleteAnnonceUseCase';
+import { HttpAnnonceRepository } from '../../infrastructure/repositories/HttpAnnonceRepository';
+
+export const authRepository = new HttpAuthRepository();
+export const etudiantRepository = new HttpEtudiantRepository();
+export const programmeRepository = new HttpProgrammeRepository();
+export const diplomeRepository = new HttpDiplomeRepository();
+
+export const loginUseCase = new LoginUseCase(authRepository);
+export const listEtudiantsUseCase = new ListEtudiantsUseCase(etudiantRepository);
+export const listProgrammesUseCase = new ListProgrammesUseCase(programmeRepository);
+
+export const noteRepository = new HttpNoteRepository();
+export const listNotesUseCase = new ListNotesUseCase(noteRepository);
+export const createNoteUseCase = new CreateNoteUseCase(noteRepository);
+export const updateNoteUseCase = new UpdateNoteUseCase(noteRepository);
+export const deleteNoteUseCase = new DeleteNoteUseCase(noteRepository);
+
+export const presenceRepository = new HttpPresenceRepository();
+export const listPresencesUseCase = new ListPresencesUseCase(presenceRepository);
+export const createPresenceUseCase = new CreatePresenceUseCase(presenceRepository);
+export const updatePresenceUseCase = new UpdatePresenceUseCase(presenceRepository);
+export const deletePresenceUseCase = new DeletePresenceUseCase(presenceRepository);
+
+// import session de présence
+import { HttpPresenceSessionRepository } from '../../infrastructure/repositories/HttpPresenceSessionRepository';
+import { CreatePresenceSessionUseCase } from '../../application/presences/CreatePresenceSessionUseCase';
+import { ListPresenceSessionsUseCase } from '../../application/presences/ListPresenceSessionsUseCase';
+import { ClosePresenceSessionUseCase } from '../../application/presences/ClosePresenceSessionUseCase';
+import { ScanPresenceSessionUseCase } from '../../application/presences/ScanPresenceSessionUseCase';
+
+export const paiementRepository = new HttpPaiementRepository();
+export const listPaiementsUseCase = new ListPaiementsUseCase(paiementRepository);
+export const createPaiementUseCase = new CreatePaiementUseCase(paiementRepository);
+export const annonceRepository = new HttpAnnonceRepository();
+export const listAnnoncesUseCase = new ListAnnoncesUseCase(annonceRepository);
+export const createAnnonceUseCase = new CreateAnnonceUseCase(annonceRepository);
+export const updateAnnonceUseCase = new UpdateAnnonceUseCase(annonceRepository);
+export const deleteAnnonceUseCase = new DeleteAnnonceUseCase(annonceRepository);
+
+//export session de présence
+export const presenceSessionRepository = new HttpPresenceSessionRepository();
+
+export const createPresenceSessionUseCase =
+    new CreatePresenceSessionUseCase(presenceSessionRepository);
+
+export const listPresenceSessionsUseCase =
+    new ListPresenceSessionsUseCase(presenceSessionRepository);
+
+export const closePresenceSessionUseCase =
+    new ClosePresenceSessionUseCase(presenceSessionRepository);
+
+export const scanPresenceSessionUseCase =
+    new ScanPresenceSessionUseCase(presenceSessionRepository);
+
+========== C:\Users\CROCK\Desktop\projet-costm\frontend\src\infrastructure\repositories\HttpPresenceSessionRepository.ts ==========
+
+import { apiClient } from '../http/apiClient';
+import type { PresenceSession } from '../../domain/entities/PresenceSession';
+import type { PresenceSessionRepository } from '../../domain/repositories/PresenceSessionRepository';
+
+export class HttpPresenceSessionRepository implements PresenceSessionRepository {
+  async create(cours: string): Promise<PresenceSession> {
+    const response = await apiClient.post<PresenceSession>(
+      '/presences/sessions',
+      { cours },
+    );
+    return response.data;
+  }
+
+  async list(): Promise<PresenceSession[]> {
+    const response = await apiClient.get<PresenceSession[]>('/presences/sessions');
+    return response.data;
+  }
+
+  async close(id: string): Promise<PresenceSession> {
+    const response = await apiClient.patch<PresenceSession>(
+      `/presences/sessions/${id}/close`,
+    );
+    return response.data;
+  }
+
+  async scan(token: string): Promise<unknown> {
+    const response = await apiClient.post(
+      `/presences/sessions/${encodeURIComponent(token)}/scan`,
+    );
+    return response.data;
+  }
+}
+

@@ -11,4 +11,4 @@ import { ProgrammeController } from './programme.controller';
   providers: [ProgrammeService],
   exports: [ProgrammeService, TypeOrmModule],
 })
-export class ProgrammeModule {}
+export class ProgrammeModule { }
